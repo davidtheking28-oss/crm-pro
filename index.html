@@ -6,6 +6,7 @@
 <title>CRM Pro</title>
 <link href="https://fonts.googleapis.com/css2?family=Urbanist:wght@400;500;600;700;800;900&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
 :root{
   --bg:#070B17;--sidebar:#0A0F1E;--card:rgba(255,255,255,.03);--card-h:rgba(255,255,255,.052);
@@ -762,6 +763,8 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
     <div class="f-group"><label class="f-lbl" for="set-role">תפקיד</label><input class="f-in" id="set-role" placeholder="תפקיד"></div>
     <div class="f-group"><label class="f-lbl" for="set-target">יעד רבעוני (₪)</label><input class="f-in" id="set-target" type="number" placeholder="1500000"></div>
     <div class="modal-foot"><button class="btn btn-primary" onclick="saveSettingsForm()">שמור</button><button class="btn btn-ghost" onclick="closeModal('modal-settings')">ביטול</button></div>
+    <div class="d-section-title">סנכרון ענן</div>
+    <div id="cloud-panel"></div>
   </div>
 </div>
 
@@ -797,6 +800,7 @@ function openSettings(){
   document.getElementById('set-name').value=SETTINGS.userName;
   document.getElementById('set-role').value=SETTINGS.userRole;
   document.getElementById('set-target').value=SETTINGS.target;
+  renderCloudPanel();
   document.getElementById('modal-settings').classList.add('open');
 }
 function saveSettingsForm(){
@@ -812,9 +816,116 @@ const STAGE_CLR={'חדש':'#94A3B8','ניסיון קשר':'#5B7CF6','לא ענה
 let cmdSel=0,cmdItems=[];
 
 /* ─── PERSIST ─── */
-function persist(){localStorage.setItem('crm_c',JSON.stringify(DB.contacts));localStorage.setItem('crm_d',JSON.stringify(DB.deals));localStorage.setItem('crm_t',JSON.stringify(DB.tasks))}
+function persist(){localStorage.setItem('crm_c',JSON.stringify(DB.contacts));localStorage.setItem('crm_d',JSON.stringify(DB.deals));localStorage.setItem('crm_t',JSON.stringify(DB.tasks));pushToCloud()}
 function load(){DB.contacts=JSON.parse(localStorage.getItem('crm_c')||'[]');DB.deals=JSON.parse(localStorage.getItem('crm_d')||'[]');DB.tasks=JSON.parse(localStorage.getItem('crm_t')||'[]');actLog=JSON.parse(localStorage.getItem('crm_act')||'[]')}
 function persistAct(){localStorage.setItem('crm_act',JSON.stringify(actLog))}
+
+/* ─── CLOUD SYNC (Supabase, optional) ─── */
+const SUPABASE_URL='__SUPABASE_URL__';
+const SUPABASE_ANON_KEY='__SUPABASE_ANON__';
+const CLOUD_ENABLED=!SUPABASE_URL.includes('__SUPABASE')&&!SUPABASE_ANON_KEY.includes('__SUPABASE');
+const sb=CLOUD_ENABLED?supabase.createClient(SUPABASE_URL,SUPABASE_ANON_KEY):null;
+let cloudUser=null,cloudBusy=false;
+
+function contactToRow(c,uid){return{id:c.id,user_id:uid,fname:c.fname,lname:c.lname,company:c.company,phone:c.phone,email:c.email,status:c.status,ctype:c.ctype||null,lead_stage:c.leadStage||null,lead_type:c.leadType||null,source:c.source||null,follow_up:c.followUp||null,notes:c.notes||[],date:c.date||null}}
+function rowToContact(r){return{id:r.id,fname:r.fname,lname:r.lname,company:r.company,phone:r.phone,email:r.email,status:r.status,ctype:r.ctype,leadStage:r.lead_stage,leadType:r.lead_type,source:r.source,followUp:r.follow_up,notes:r.notes||[],date:r.date}}
+function dealToRow(d,uid){return{id:d.id,user_id:uid,name:d.name,company:d.company,value:d.value,prob:d.prob,stage:d.stage,status:d.status||'open',close:d.close||null,closed_date:d.closedDate||null,notes:d.notes||[],created:d.created||null}}
+function rowToDeal(r){return{id:r.id,name:r.name,company:r.company,value:Number(r.value),prob:r.prob,stage:r.stage,status:r.status,close:r.close,closedDate:r.closed_date,notes:r.notes||[],created:r.created}}
+function taskToRow(t,uid){return{id:t.id,user_id:uid,title:t.title,priority:t.priority,due:t.due||null,related:t.related,done:!!t.done}}
+function rowToTask(r){return{id:r.id,title:r.title,priority:r.priority,due:r.due,related:r.related,done:r.done}}
+
+async function pushToCloud(){
+  if(!CLOUD_ENABLED||!cloudUser||cloudBusy)return;
+  const uid=cloudUser.id;
+  try{
+    await sb.from('contacts').delete().eq('user_id',uid);
+    if(DB.contacts.length)await sb.from('contacts').insert(DB.contacts.map(c=>contactToRow(c,uid)));
+    await sb.from('deals').delete().eq('user_id',uid);
+    if(DB.deals.length)await sb.from('deals').insert(DB.deals.map(d=>dealToRow(d,uid)));
+    await sb.from('tasks').delete().eq('user_id',uid);
+    if(DB.tasks.length)await sb.from('tasks').insert(DB.tasks.map(t=>taskToRow(t,uid)));
+  }catch(e){console.error('cloud sync failed',e);toast('סנכרון ענן נכשל','err')}
+}
+
+async function pullFromCloud(){
+  if(!CLOUD_ENABLED||!cloudUser)return;
+  const uid=cloudUser.id;
+  const[{data:c},{data:d},{data:t}]=await Promise.all([
+    sb.from('contacts').select('*').eq('user_id',uid),
+    sb.from('deals').select('*').eq('user_id',uid),
+    sb.from('tasks').select('*').eq('user_id',uid),
+  ]);
+  if((c&&c.length)||(d&&d.length)||(t&&t.length)){
+    DB.contacts=(c||[]).map(rowToContact);
+    DB.deals=(d||[]).map(rowToDeal);
+    DB.tasks=(t||[]).map(rowToTask);
+    localStorage.setItem('crm_c',JSON.stringify(DB.contacts));
+    localStorage.setItem('crm_d',JSON.stringify(DB.deals));
+    localStorage.setItem('crm_t',JSON.stringify(DB.tasks));
+  } else {
+    await pushToCloud();
+  }
+  renderAll();
+}
+
+function renderAll(){
+  updateDash();updateBadges();renderActFeed();renderPipeRows();renderRevChart();renderDonut();
+  if(curPage==='contacts')renderContacts();
+  if(curPage==='leads')renderLeads();
+  if(curPage==='deals'){renderDeals();updatePipelineTotal()}
+  if(curPage==='tasks')renderTasks();
+  if(curPage==='reports')renderReports();
+}
+
+async function initCloud(){
+  if(!CLOUD_ENABLED)return;
+  const{data:{session}}=await sb.auth.getSession();
+  if(session){cloudUser=session.user;cloudBusy=true;await pullFromCloud();cloudBusy=false}
+  renderCloudPanel();
+}
+
+function renderCloudPanel(){
+  const el=document.getElementById('cloud-panel');if(!el)return;
+  if(!CLOUD_ENABLED){el.innerHTML=`<div style="font-size:12.5px;color:var(--text3)">סנכרון ענן לא הוגדר. ראה supabase/migrations/0001_init.sql להוראות התקנה.</div>`;return}
+  if(cloudUser){
+    el.innerHTML=`<div style="font-size:12.5px;color:var(--text2);margin-bottom:8px">☁️ מחובר כ-<strong style="color:var(--text)">${esc(cloudUser.email)}</strong> — מסנכרן אוטומטית</div>
+      <button class="btn btn-ghost btn-sm" onclick="cloudSignOut()">התנתק</button>`;
+  } else {
+    el.innerHTML=`
+      <input class="f-in" id="cloud-email" type="email" placeholder="אימייל" style="margin-bottom:8px">
+      <input class="f-in" id="cloud-pw" type="password" placeholder="סיסמה" style="margin-bottom:8px">
+      <div style="display:flex;gap:7px">
+        <button class="btn btn-primary btn-sm" onclick="cloudSignIn()">התחבר</button>
+        <button class="btn btn-ghost btn-sm" onclick="cloudSignUp()">הרשמה</button>
+      </div>`;
+  }
+}
+
+async function cloudSignIn(){
+  const email=document.getElementById('cloud-email').value.trim();
+  const password=document.getElementById('cloud-pw').value;
+  if(!email||!password){toast('נא למלא אימייל וסיסמה','err');return}
+  const{data,error}=await sb.auth.signInWithPassword({email,password});
+  if(error){toast(error.message,'err');return}
+  cloudUser=data.user;cloudBusy=true;await pullFromCloud();cloudBusy=false;
+  renderCloudPanel();toast('מחובר לסנכרון ענן');
+}
+async function cloudSignUp(){
+  const email=document.getElementById('cloud-email').value.trim();
+  const password=document.getElementById('cloud-pw').value;
+  if(!email||!password){toast('נא למלא אימייל וסיסמה','err');return}
+  const{data,error}=await sb.auth.signUp({email,password});
+  if(error){toast(error.message,'err');return}
+  if(!data.session){toast('נשלח מייל אימות — אשר כדי להתחבר','info');return}
+  cloudUser=data.user;cloudBusy=true;await pullFromCloud();cloudBusy=false;
+  renderCloudPanel();toast('נרשמת וסונכרנת לענן');
+}
+async function cloudSignOut(){
+  if(!sb)return;
+  await sb.auth.signOut();
+  cloudUser=null;
+  renderCloudPanel();toast('התנתקת מסנכרון ענן','info');
+}
 
 /* ─── HELPERS ─── */
 function today(){return new Date().toISOString().split('T')[0]}
@@ -1856,6 +1967,7 @@ const _savedTheme=localStorage.getItem('crm_theme')||'dark';
 applyTheme(_savedTheme);
 applySettingsToUI();
 updateDash();updateBadges();renderActFeed();renderPipeRows();renderRevChart();renderDonut();
+initCloud();
 </script>
 </body>
 </html>

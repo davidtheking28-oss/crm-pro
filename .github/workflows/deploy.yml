@@ -1,0 +1,45 @@
+name: Deploy CRM to GitHub Pages
+
+on:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Inject Supabase config
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
+        run: |
+          mkdir -p dist
+          cp index.html dist/index.html
+          if [ -n "$SUPABASE_URL" ]; then
+            sed -i "s|__SUPABASE_URL__|$SUPABASE_URL|g" dist/index.html
+          fi
+          if [ -n "$SUPABASE_ANON_KEY" ]; then
+            sed -i "s|__SUPABASE_ANON__|$SUPABASE_ANON_KEY|g" dist/index.html
+          fi
+
+      - uses: actions/configure-pages@v4
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: dist
+
+      - id: deployment
+        uses: actions/deploy-pages@v4
