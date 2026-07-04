@@ -1,0 +1,1497 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CRM Pro</title>
+<link href="https://fonts.googleapis.com/css2?family=Urbanist:wght@400;500;600;700;800;900&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<style>
+:root{
+  --bg:#070B17;--sidebar:#0A0F1E;--card:rgba(255,255,255,.03);--card-h:rgba(255,255,255,.052);
+  --border:rgba(255,255,255,.068);--border-s:rgba(255,255,255,.12);
+  --accent:#5B7CF6;--accent-dim:rgba(91,124,246,.14);--accent-glow:rgba(91,124,246,.28);
+  --green:#22C55E;--green-dim:rgba(34,197,94,.12);
+  --amber:#F59E0B;--amber-dim:rgba(245,158,11,.12);
+  --red:#EF4444;--red-dim:rgba(239,68,68,.12);
+  --purple:#A78BFA;--purple-dim:rgba(167,139,250,.12);
+  --cyan:#06B6D4;--cyan-dim:rgba(6,182,212,.12);
+  --text:#E2E8F0;--text2:#94A3B8;--text3:#475569;
+  --sidebar-w:244px;--topbar-h:58px;--r:12px;--r-sm:8px;--tr:160ms ease;
+}
+[data-theme="light"]{
+  --bg:#F0F4FA;--sidebar:#FFFFFF;--card:#FFFFFF;--card-h:#F7F9FC;
+  --border:#E4E9F0;--border-s:#C5D0DE;
+  --accent:#3D6FF8;--accent-dim:#EEF2FF;--accent-glow:rgba(61,111,248,.2);
+  --green:#10B981;--green-dim:#ECFDF5;
+  --amber:#F59E0B;--amber-dim:#FFFBEB;
+  --red:#EF4444;--red-dim:#FEF2F2;
+  --purple:#8B5CF6;--purple-dim:#F5F3FF;
+  --cyan:#06B6D4;--cyan-dim:#ECFEFF;
+  --text:#0F172A;--text2:#475569;--text3:#94A3B8;
+}
+html{transition:background .25s,color .25s}
+.sidebar,.topbar,.modal-box,.drawer,.cmd-box{transition:background .25s,border-color .25s}
+@media(prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:.01ms!important;transition-duration:.01ms!important}}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;display:flex;overflow:hidden;line-height:1.5}
+
+/* SIDEBAR */
+.sidebar{width:var(--sidebar-w);min-height:100vh;background:var(--sidebar);border-left:1px solid var(--border);display:flex;flex-direction:column;flex-shrink:0;z-index:10}
+.sb-logo{padding:20px 16px 16px;border-bottom:1px solid var(--border)}
+.sb-logo-inner{display:flex;align-items:center;gap:10px}
+.logo-icon{width:34px;height:34px;background:linear-gradient(135deg,var(--accent),#8B5CF6);border-radius:9px;display:grid;place-items:center;box-shadow:0 4px 12px var(--accent-glow);flex-shrink:0}
+.logo-text{font-family:'Urbanist',sans-serif;font-weight:800;font-size:16px;letter-spacing:-.4px}
+.logo-sub{font-size:11px;color:var(--text3);margin-top:1px}
+.sb-nav{flex:1;padding:12px 10px;display:flex;flex-direction:column;gap:1px;overflow-y:auto}
+.nav-lbl{font-size:10px;font-weight:600;color:var(--text3);letter-spacing:.9px;text-transform:uppercase;padding:12px 10px 5px}
+.nav-item{display:flex;align-items:center;gap:9px;padding:0 12px;height:40px;min-height:44px;border-radius:var(--r-sm);cursor:pointer;color:var(--text2);font-size:13.5px;font-weight:500;transition:background var(--tr),color var(--tr);position:relative;user-select:none}
+.nav-item:hover{background:var(--card-h);color:var(--text)}
+.nav-item:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.nav-item.active{background:var(--accent-dim);color:var(--accent)}
+.nav-item.active::before{content:'';position:absolute;right:0;top:8px;bottom:8px;width:3px;background:var(--accent);border-radius:3px 0 0 3px}
+.nav-icon{width:16px;height:16px;flex-shrink:0;opacity:.75}
+.nav-item.active .nav-icon,.nav-item:hover .nav-icon{opacity:1}
+.nav-badge{margin-right:auto;background:var(--accent);color:#fff;font-size:10px;font-weight:700;padding:0 7px;border-radius:20px;height:16px;line-height:16px;min-width:20px;text-align:center}
+.sb-footer{padding:10px;border-top:1px solid var(--border)}
+.user-tile{display:flex;align-items:center;gap:9px;padding:9px 10px;border-radius:var(--r-sm);cursor:pointer;transition:background var(--tr);min-height:44px}
+.user-tile:hover{background:var(--card-h)}
+.u-av{width:30px;height:30px;border-radius:50%;background:linear-gradient(135deg,var(--accent),var(--purple));display:grid;place-items:center;font-family:'Urbanist',sans-serif;font-weight:700;font-size:11px;color:#fff;flex-shrink:0}
+.u-name{font-size:13px;font-weight:600;color:var(--text)}
+.u-role{font-size:11px;color:var(--text3)}
+
+/* MAIN */
+.main{flex:1;display:flex;flex-direction:column;overflow:hidden;min-width:0}
+.topbar{height:var(--topbar-h);border-bottom:1px solid var(--border);display:flex;align-items:center;padding:0 22px;gap:10px;background:rgba(7,11,23,.9);backdrop-filter:blur(12px);flex-shrink:0;z-index:5}
+.page-title{font-family:'Urbanist',sans-serif;font-weight:700;font-size:15px;letter-spacing:-.2px;flex:1}
+.topbar-actions{display:flex;align-items:center;gap:8px}
+.search-wrap{display:flex;align-items:center;gap:7px;background:var(--card);border:1px solid var(--border);border-radius:var(--r-sm);padding:0 11px;height:34px;transition:border-color var(--tr);cursor:text}
+.search-wrap:focus-within{border-color:var(--accent)}
+.search-wrap input{background:none;border:none;outline:none;color:var(--text);font-family:'DM Sans',sans-serif;font-size:13px;width:170px;direction:rtl}
+.search-wrap input::placeholder{color:var(--text3)}
+.kbd-hint{font-size:10px;color:var(--text3);background:var(--border);border-radius:4px;padding:2px 5px;cursor:pointer;transition:all var(--tr);white-space:nowrap}
+.kbd-hint:hover{background:var(--accent-dim);color:var(--accent)}
+
+/* BUTTONS */
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:5px;padding:0 14px;height:34px;min-width:44px;border-radius:var(--r-sm);font-family:'DM Sans',sans-serif;font-size:13px;font-weight:600;cursor:pointer;border:none;transition:all var(--tr);white-space:nowrap}
+.btn:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.btn-primary{background:var(--accent);color:#fff;box-shadow:0 2px 10px var(--accent-glow)}
+.btn-primary:hover{background:#4a6cf0;transform:translateY(-1px);box-shadow:0 4px 16px var(--accent-glow)}
+.btn-primary:active{transform:none}
+.btn-ghost{background:var(--card);color:var(--text2);border:1px solid var(--border)}
+.btn-ghost:hover{background:var(--card-h);color:var(--text);border-color:var(--border-s)}
+.btn-red{background:var(--red-dim);color:var(--red);border:1px solid transparent}
+.btn-red:hover{border-color:var(--red)}
+.btn-sm{height:28px;padding:0 9px;font-size:11.5px;min-width:28px}
+.btn-icon{width:32px;height:32px;padding:0;min-width:32px}
+
+/* CONTENT */
+.content{flex:1;overflow-y:auto;padding:22px;overflow-x:hidden}
+.content::-webkit-scrollbar{width:4px}
+.content::-webkit-scrollbar-thumb{background:var(--border-s);border-radius:2px}
+.page{display:none}
+.page.active{display:block;animation:fadeUp .18s ease}
+@keyframes fadeUp{from{opacity:0;transform:translateY(7px)}to{opacity:1;transform:translateY(0)}}
+
+/* CARDS */
+.card{background:var(--card);border:1px solid var(--border);border-radius:var(--r);padding:18px}
+.card-hd{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:16px;gap:10px}
+.card-title{font-family:'Urbanist',sans-serif;font-weight:700;font-size:14px}
+.card-sub{font-size:11px;color:var(--text3);margin-top:2px}
+
+/* STATS */
+.stats-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:18px}
+.stat-card{background:var(--card);border:1px solid var(--border);border-radius:var(--r);padding:16px;transition:border-color var(--tr),box-shadow var(--tr)}
+.stat-card:hover{border-color:var(--border-s);box-shadow:0 4px 20px rgba(0,0,0,.22)}
+.stat-icon{width:36px;height:36px;border-radius:9px;display:grid;place-items:center;margin-bottom:12px}
+.stat-lbl{font-size:11.5px;color:var(--text3);font-weight:500;margin-bottom:4px}
+.stat-val{font-family:'Urbanist',sans-serif;font-size:26px;font-weight:800;letter-spacing:-.5px;line-height:1;margin-bottom:7px}
+.stat-delta{font-size:11.5px;display:flex;align-items:center;gap:3px}
+.up{color:var(--green)}.down{color:var(--red)}.neutral{color:var(--text3)}
+
+/* GRID LAYOUTS */
+.g2-3{display:grid;grid-template-columns:2fr 1fr;gap:12px;margin-bottom:18px}
+.g1-1{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:18px}
+.g3{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:18px}
+.chart-wrap{position:relative;height:210px}
+
+/* PIPELINE BAR */
+.pipe-rows{display:flex;flex-direction:column;gap:10px}
+.pipe-row{display:flex;align-items:center;gap:8px}
+.pipe-name{font-size:12px;color:var(--text2);width:82px;flex-shrink:0;text-align:right}
+.pipe-track{flex:1;height:6px;background:var(--border);border-radius:3px;overflow:hidden}
+.pipe-fill{height:100%;border-radius:3px;transition:width .7s cubic-bezier(.4,0,.2,1)}
+.pipe-cnt{font-family:'Urbanist',sans-serif;font-weight:700;font-size:12px;width:22px;text-align:left}
+.pipe-val{font-size:11px;color:var(--text3);width:70px;text-align:left}
+
+/* ACTIVITY */
+.act-feed{display:flex;flex-direction:column}
+.act-row{display:flex;align-items:flex-start;gap:9px;padding:10px 0;border-bottom:1px solid var(--border)}
+.act-row:last-child{border-bottom:none;padding-bottom:0}
+.act-dot{width:7px;height:7px;border-radius:50%;margin-top:6px;flex-shrink:0}
+.act-text{flex:1;font-size:13px;color:var(--text2);line-height:1.45}
+.act-text strong{color:var(--text);font-weight:600}
+.act-time{font-size:11px;color:var(--text3);flex-shrink:0;margin-top:1px}
+
+/* BADGES */
+.badge{display:inline-flex;align-items:center;gap:4px;padding:2px 9px;border-radius:20px;font-size:11.5px;font-weight:600;white-space:nowrap}
+.badge::before{content:'';width:5px;height:5px;border-radius:50%;flex-shrink:0}
+.b-green{background:var(--green-dim);color:var(--green)}.b-green::before{background:var(--green)}
+.b-amber{background:var(--amber-dim);color:var(--amber)}.b-amber::before{background:var(--amber)}
+.b-red{background:var(--red-dim);color:var(--red)}.b-red::before{background:var(--red)}
+.b-purple{background:var(--purple-dim);color:var(--purple)}.b-purple::before{background:var(--purple)}
+.b-blue{background:var(--accent-dim);color:var(--accent)}.b-blue::before{background:var(--accent)}
+.b-cyan{background:var(--cyan-dim);color:var(--cyan)}.b-cyan::before{background:var(--cyan)}
+
+/* TABLE */
+.tbl-toolbar{display:flex;align-items:center;gap:8px;margin-bottom:12px;flex-wrap:wrap}
+.tab-pills{display:flex;gap:2px;background:var(--card);border:1px solid var(--border);border-radius:var(--r-sm);padding:3px}
+.tab-pill{padding:4px 12px;border-radius:6px;font-size:12.5px;font-weight:500;color:var(--text3);cursor:pointer;transition:all var(--tr);border:none;background:none;font-family:'DM Sans',sans-serif;min-height:28px}
+.tab-pill.active{background:var(--accent);color:#fff}
+.tab-pill:hover:not(.active){color:var(--text);background:var(--card-h)}
+.tbl-card{background:var(--card);border:1px solid var(--border);border-radius:var(--r);overflow:hidden}
+.data-tbl{width:100%;border-collapse:collapse}
+.data-tbl th{text-align:right;padding:9px 13px;font-size:10.5px;font-weight:600;color:var(--text3);letter-spacing:.5px;text-transform:uppercase;border-bottom:1px solid var(--border);cursor:pointer;user-select:none;white-space:nowrap;transition:color var(--tr)}
+.data-tbl th:hover{color:var(--text)}
+.data-tbl th.sort-asc::after{content:' ↑'}
+.data-tbl th.sort-desc::after{content:' ↓'}
+.data-tbl td{padding:11px 13px;font-size:13px;color:var(--text2);border-bottom:1px solid var(--border);vertical-align:middle}
+.data-tbl tr:last-child td{border-bottom:none}
+.data-tbl tbody tr{transition:background var(--tr);cursor:pointer}
+.data-tbl tbody tr:hover td{background:var(--card-h)}
+.c-cell{display:flex;align-items:center;gap:9px}
+.c-av{width:30px;height:30px;border-radius:50%;display:grid;place-items:center;font-family:'Urbanist',sans-serif;font-weight:700;font-size:11px;color:#fff;flex-shrink:0}
+.c-name{font-weight:600;color:var(--text);font-size:13px}
+.c-co{font-size:11.5px;color:var(--text3);margin-top:1px}
+.score-bar{width:50px;height:5px;background:var(--border);border-radius:3px;overflow:hidden;display:inline-block}
+.score-fill{height:100%;border-radius:3px;background:var(--accent)}
+
+/* KANBAN */
+.kanban-wrap{display:flex;gap:11px;overflow-x:auto;padding-bottom:6px;align-items:flex-start}
+.kanban-wrap::-webkit-scrollbar{height:4px}
+.kanban-wrap::-webkit-scrollbar-thumb{background:var(--border-s);border-radius:2px}
+.k-col{min-width:232px;flex-shrink:0}
+.k-col-head{padding:6px 4px 8px}
+.k-col-meta{display:flex;align-items:center;justify-content:space-between;margin-bottom:5px}
+.k-col-title{display:flex;align-items:center;gap:6px;font-family:'Urbanist',sans-serif;font-weight:700;font-size:13px}
+.k-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0}
+.k-cnt{font-size:11px;color:var(--text3);background:var(--card);border:1px solid var(--border);padding:0 8px;height:18px;line-height:18px;border-radius:12px}
+.k-col-total{font-family:'Urbanist',sans-serif;font-size:11.5px;font-weight:700;color:var(--text3)}
+.k-cards{display:flex;flex-direction:column;gap:7px;min-height:50px}
+.deal-card{background:var(--card);border:1px solid var(--border);border-radius:var(--r);padding:12px;cursor:pointer;transition:border-color var(--tr),box-shadow var(--tr),transform var(--tr)}
+.deal-card:hover{border-color:var(--border-s);box-shadow:0 6px 20px rgba(0,0,0,.25);transform:translateY(-2px)}
+.deal-card:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.d-name{font-weight:600;font-size:13px;color:var(--text);margin-bottom:3px;line-height:1.4}
+.d-co{font-size:11.5px;color:var(--text3);margin-bottom:8px}
+.d-prob-bar{height:3px;background:var(--border);border-radius:2px;overflow:hidden;margin-bottom:8px}
+.d-prob-fill{height:100%;border-radius:2px;transition:width .5s ease}
+.d-meta{display:flex;align-items:center;justify-content:space-between}
+.d-val{font-family:'Urbanist',sans-serif;font-weight:700;font-size:13.5px}
+.d-prob-txt{font-size:11px;color:var(--text3)}
+.d-foot{display:flex;align-items:center;justify-content:space-between;margin-top:9px;padding-top:9px;border-top:1px solid var(--border)}
+.d-owner{width:20px;height:20px;border-radius:50%;display:grid;place-items:center;font-family:'Urbanist',sans-serif;font-size:9px;font-weight:700;color:#fff}
+.d-date{font-size:11px;color:var(--text3)}
+.d-age{font-size:10px;padding:1px 6px;border-radius:4px;font-weight:600}
+.d-age.hot{background:var(--red-dim);color:var(--red)}
+.d-age.ok{background:var(--green-dim);color:var(--green)}
+.k-add-btn{display:flex;align-items:center;justify-content:center;gap:5px;width:100%;padding:7px;margin-top:3px;border:1px dashed var(--border);border-radius:var(--r-sm);background:none;color:var(--text3);font-family:'DM Sans',sans-serif;font-size:12px;cursor:pointer;transition:all var(--tr);min-height:32px}
+.k-add-btn:hover{border-color:var(--accent);color:var(--accent);background:var(--accent-dim)}
+
+/* DEAL LIST VIEW */
+.view-toggle{display:flex;gap:2px;background:var(--card);border:1px solid var(--border);border-radius:var(--r-sm);padding:3px}
+.vt-btn{width:28px;height:28px;border-radius:5px;border:none;background:none;color:var(--text3);cursor:pointer;display:grid;place-items:center;transition:all var(--tr)}
+.vt-btn.active{background:var(--accent);color:#fff}
+.vt-btn:hover:not(.active){background:var(--card-h);color:var(--text)}
+
+/* TASKS */
+.tasks-wrap{display:grid;grid-template-columns:1fr 260px;gap:18px}
+.sec-lbl{font-family:'Urbanist',sans-serif;font-size:11.5px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.7px;margin:16px 0 7px;display:flex;align-items:center;gap:8px}
+.sec-lbl:first-child{margin-top:0}
+.sec-line{flex:1;height:1px;background:var(--border)}
+.task-row{display:flex;align-items:center;gap:9px;padding:10px 13px;background:var(--card);border:1px solid var(--border);border-radius:var(--r);margin-bottom:5px;cursor:pointer;transition:border-color var(--tr),background var(--tr)}
+.task-row:hover{border-color:var(--border-s);background:var(--card-h)}
+.task-row.done{opacity:.45}
+.t-check{width:18px;height:18px;border-radius:50%;border:2px solid var(--border-s);display:grid;place-items:center;cursor:pointer;transition:all var(--tr);flex-shrink:0}
+.t-check:hover:not(.checked){border-color:var(--accent)}
+.t-check.checked{background:var(--green);border-color:var(--green);color:#fff}
+.t-body{flex:1;min-width:0}
+.t-title{font-size:13px;color:var(--text);font-weight:500}
+.task-row.done .t-title{text-decoration:line-through}
+.t-meta{font-size:11px;color:var(--text3);margin-top:1px;display:flex;gap:8px}
+.p-dot{width:6px;height:6px;border-radius:50%;flex-shrink:0}
+
+/* MINI STATS */
+.mini-stat-row{display:flex;justify-content:space-between;align-items:center;font-size:13px;padding:7px 0;border-bottom:1px solid var(--border)}
+.mini-stat-row:last-child{border-bottom:none}
+.mini-stat-row span:first-child{color:var(--text2)}
+.mini-val{font-family:'Urbanist',sans-serif;font-weight:700;font-size:13.5px}
+
+/* REPORTS */
+.reports-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:12px}
+
+/* ── CONTACT DRAWER ── */
+.drawer-overlay{position:fixed;inset:0;background:rgba(7,11,23,.6);backdrop-filter:blur(4px);z-index:50;opacity:0;pointer-events:none;transition:opacity .2s}
+.drawer-overlay.open{opacity:1;pointer-events:all}
+.drawer{position:fixed;top:0;left:0;width:400px;max-width:95vw;height:100vh;background:#0D1528;border-right:1px solid var(--border-s);z-index:51;transform:translateX(-100%);transition:transform .22s cubic-bezier(.4,0,.2,1);display:flex;flex-direction:column;overflow:hidden}
+.drawer-overlay.open .drawer{transform:translateX(0)}
+.drawer-head{padding:18px 18px 14px;border-bottom:1px solid var(--border);display:flex;align-items:flex-start;gap:12px;flex-shrink:0}
+.drawer-av{width:44px;height:44px;border-radius:50%;display:grid;place-items:center;font-family:'Urbanist',sans-serif;font-weight:700;font-size:16px;color:#fff;flex-shrink:0}
+.drawer-info{flex:1;min-width:0}
+.drawer-name{font-family:'Urbanist',sans-serif;font-weight:800;font-size:17px;letter-spacing:-.3px}
+.drawer-co{font-size:13px;color:var(--text3);margin-top:2px}
+.drawer-close{width:32px;height:32px;min-width:44px;min-height:44px;border-radius:var(--r-sm);background:var(--card);border:1px solid var(--border);color:var(--text2);cursor:pointer;display:grid;place-items:center;transition:all var(--tr);font-size:15px}
+.drawer-close:hover{background:var(--red-dim);color:var(--red);border-color:var(--red)}
+.drawer-tabs{display:flex;gap:0;border-bottom:1px solid var(--border);flex-shrink:0}
+.dtab{padding:10px 16px;font-size:13px;font-weight:500;color:var(--text3);cursor:pointer;border-bottom:2px solid transparent;transition:all var(--tr)}
+.dtab.active{color:var(--accent);border-bottom-color:var(--accent)}
+.dtab:hover:not(.active){color:var(--text)}
+.drawer-body{flex:1;overflow-y:auto;padding:16px 18px}
+.drawer-body::-webkit-scrollbar{width:4px}
+.drawer-body::-webkit-scrollbar-thumb{background:var(--border-s);border-radius:2px}
+.d-field{margin-bottom:12px}
+.d-field-lbl{font-size:10.5px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px}
+.d-field-val{font-size:13px;color:var(--text)}
+.d-section-title{font-family:'Urbanist',sans-serif;font-size:12px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.6px;margin:16px 0 8px}
+.note-input{width:100%;background:var(--card);border:1px solid var(--border);border-radius:var(--r-sm);padding:9px 11px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:13px;resize:none;outline:none;direction:rtl;transition:border-color var(--tr);line-height:1.5}
+.note-input:focus{border-color:var(--accent)}
+.note-item{background:var(--card);border:1px solid var(--border);border-radius:var(--r-sm);padding:10px 12px;margin-bottom:6px}
+.note-text{font-size:13px;color:var(--text2);line-height:1.5}
+.note-date{font-size:10.5px;color:var(--text3);margin-top:4px}
+.drawer-deal-item{background:var(--card);border:1px solid var(--border);border-radius:var(--r-sm);padding:10px 12px;margin-bottom:6px}
+.ddi-name{font-weight:600;font-size:13px;color:var(--text);margin-bottom:3px}
+.ddi-meta{display:flex;justify-content:space-between;font-size:12px;color:var(--text3)}
+.quick-actions{display:flex;gap:6px;margin-top:12px}
+
+/* ── COMMAND PALETTE ── */
+.cmd-overlay{position:fixed;inset:0;background:rgba(7,11,23,.75);backdrop-filter:blur(8px);z-index:200;opacity:0;pointer-events:none;transition:opacity .15s;display:grid;place-items:start center;padding-top:15vh}
+.cmd-overlay.open{opacity:1;pointer-events:all}
+.cmd-box{background:#0D1528;border:1px solid var(--border-s);border-radius:14px;width:520px;max-width:94vw;box-shadow:0 40px 80px rgba(0,0,0,.6);transform:scale(.97) translateY(-8px);transition:transform .15s}
+.cmd-overlay.open .cmd-box{transform:scale(1) translateY(0)}
+.cmd-search-wrap{display:flex;align-items:center;gap:10px;padding:14px 16px;border-bottom:1px solid var(--border)}
+.cmd-input{flex:1;background:none;border:none;outline:none;color:var(--text);font-family:'DM Sans',sans-serif;font-size:15px;direction:rtl}
+.cmd-input::placeholder{color:var(--text3)}
+.cmd-results{max-height:340px;overflow-y:auto;padding:6px}
+.cmd-results::-webkit-scrollbar{width:4px}
+.cmd-results::-webkit-scrollbar-thumb{background:var(--border-s);border-radius:2px}
+.cmd-item{display:flex;align-items:center;gap:10px;padding:9px 10px;border-radius:var(--r-sm);cursor:pointer;transition:background var(--tr)}
+.cmd-item:hover,.cmd-item.selected{background:var(--accent-dim)}
+.cmd-item-icon{width:28px;height:28px;border-radius:6px;display:grid;place-items:center;flex-shrink:0}
+.cmd-item-title{font-size:13.5px;font-weight:500;color:var(--text)}
+.cmd-item-sub{font-size:11.5px;color:var(--text3)}
+.cmd-group-lbl{font-size:10.5px;font-weight:600;color:var(--text3);letter-spacing:.6px;text-transform:uppercase;padding:8px 10px 4px}
+.cmd-footer{padding:8px 14px;border-top:1px solid var(--border);display:flex;align-items:center;gap:14px}
+.cmd-hint{display:flex;align-items:center;gap:5px;font-size:11px;color:var(--text3)}
+.cmd-key{background:var(--border);border-radius:4px;padding:1px 5px;font-size:10px;font-family:monospace}
+
+/* MODAL */
+.modal-bg{position:fixed;inset:0;background:rgba(7,11,23,.82);backdrop-filter:blur(6px);display:grid;place-items:center;z-index:100;opacity:0;pointer-events:none;transition:opacity .18s}
+.modal-bg.open{opacity:1;pointer-events:all}
+.modal-box{background:#0D1528;border:1px solid var(--border-s);border-radius:16px;padding:24px;width:450px;max-width:95vw;max-height:88vh;overflow-y:auto;transform:scale(.96) translateY(8px);transition:transform .18s;box-shadow:0 40px 80px rgba(0,0,0,.55)}
+.modal-bg.open .modal-box{transform:scale(1) translateY(0)}
+.modal-hd{display:flex;align-items:center;justify-content:space-between;margin-bottom:20px}
+.modal-title{font-family:'Urbanist',sans-serif;font-weight:700;font-size:16px}
+.modal-close{width:32px;height:32px;min-width:44px;min-height:44px;border-radius:var(--r-sm);background:var(--card);border:1px solid var(--border);color:var(--text2);cursor:pointer;display:grid;place-items:center;transition:all var(--tr);font-size:15px}
+.modal-close:hover{background:var(--red-dim);color:var(--red);border-color:var(--red)}
+.f-group{margin-bottom:13px}
+.f-lbl{display:block;font-size:10.5px;font-weight:600;color:var(--text3);margin-bottom:5px;text-transform:uppercase;letter-spacing:.5px}
+.f-in,.f-sel{width:100%;background:var(--card);border:1px solid var(--border);border-radius:var(--r-sm);padding:9px 11px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:13px;outline:none;transition:border-color var(--tr);direction:rtl}
+.f-in:focus,.f-sel:focus{border-color:var(--accent)}
+.f-sel{cursor:pointer}
+.f-sel option{background:#0D1528}
+.f-row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.modal-foot{display:flex;gap:7px;margin-top:18px}
+
+/* TOAST */
+.toast-wrap{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);display:flex;flex-direction:column;align-items:center;gap:6px;z-index:999;pointer-events:none}
+.toast{background:#192036;border:1px solid var(--border-s);border-radius:9px;padding:10px 15px;font-size:13px;color:var(--text);box-shadow:0 8px 28px rgba(0,0,0,.45);display:flex;align-items:center;gap:8px;animation:tIn .2s ease,tOut .2s ease 2.8s forwards;white-space:nowrap}
+@keyframes tIn{from{opacity:0;transform:translateY(7px)}to{opacity:1;transform:translateY(0)}}
+@keyframes tOut{from{opacity:1}to{opacity:0}}
+
+/* EMPTY */
+.empty{display:flex;flex-direction:column;align-items:center;padding:44px 20px;color:var(--text3);gap:8px}
+.empty svg{opacity:.2}
+.empty p{font-size:13px}
+
+/* FORECAST WIDGET */
+.forecast-bar{height:8px;background:var(--border);border-radius:4px;overflow:hidden;margin-top:8px}
+.forecast-fill{height:100%;border-radius:4px;background:linear-gradient(90deg,var(--green),var(--accent));transition:width .6s ease}
+
+/* LEADS LAYOUT */
+.leads-layout{display:flex;gap:12px;align-items:flex-start}
+.leads-sidebar{width:200px;flex-shrink:0;background:var(--sidebar);border:1px solid var(--border);border-radius:var(--r);overflow:hidden;position:sticky;top:0}
+.ls-lbl{font-size:10px;font-weight:700;color:var(--text3);letter-spacing:.8px;text-transform:uppercase;padding:12px 14px 4px}
+.ls-item{display:flex;align-items:center;gap:7px;padding:8px 14px;font-size:13px;color:var(--text2);cursor:pointer;transition:all var(--tr);position:relative;user-select:none}
+.ls-item:hover{background:var(--card-h);color:var(--text)}
+.ls-item.active{background:var(--accent-dim);color:var(--accent);font-weight:600}
+.ls-item.active::before{content:'';position:absolute;right:0;top:6px;bottom:6px;width:3px;background:var(--accent);border-radius:3px 0 0 3px}
+.ls-cnt{margin-right:auto;font-size:11px;color:var(--text3);background:var(--card);border:1px solid var(--border);padding:0 7px;border-radius:10px;line-height:18px;flex-shrink:0;font-weight:600}
+.ls-item.active .ls-cnt{background:var(--accent-dim);color:var(--accent);border-color:transparent}
+.ls-sep{height:1px;background:var(--border);margin:4px 0}
+.leads-main{flex:1;min-width:0}
+.leads-toolbar{display:flex;align-items:center;gap:8px;padding:0 0 12px;flex-wrap:wrap}
+.stage-sel{background:none;border:none;outline:none;font-family:'DM Sans',sans-serif;font-size:12.5px;font-weight:600;cursor:pointer;padding:0;-webkit-appearance:none;appearance:none}
+.k-cards.drag-over{outline:2px dashed var(--accent);outline-offset:-4px;background:var(--accent-dim);border-radius:var(--r)}
+.deal-card.dragging{opacity:.35;transform:scale(.97) rotate(1deg)}
+
+/* RESPONSIVE */
+@media(max-width:1100px){.stats-grid{grid-template-columns:repeat(2,1fr)}.g2-3{grid-template-columns:1fr}}
+@media(max-width:800px){.tasks-wrap{grid-template-columns:1fr}.reports-grid{grid-template-columns:1fr}.g1-1{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+
+<!-- SIDEBAR -->
+<aside class="sidebar">
+  <div class="sb-logo">
+    <div class="sb-logo-inner">
+      <div class="logo-icon">
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+      </div>
+      <div>
+        <div class="logo-text">CRM Pro</div>
+        <div class="logo-sub">ניהול לקוחות</div>
+      </div>
+    </div>
+  </div>
+  <nav class="sb-nav">
+    <div class="nav-lbl">ראשי</div>
+    <div class="nav-item active" tabindex="0" onclick="nav('dashboard',this)" onkeydown="if(event.key==='Enter')nav('dashboard',this)">
+      <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg>
+      לוח בקרה
+    </div>
+    <div class="nav-item" tabindex="0" onclick="nav('contacts',this)" onkeydown="if(event.key==='Enter')nav('contacts',this)">
+      <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+      אנשי קשר
+      <span class="nav-badge" id="badge-c">0</span>
+    </div>
+    <div class="nav-item" tabindex="0" onclick="nav('leads',this)" onkeydown="if(event.key==='Enter')nav('leads',this)">
+      <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></svg>
+      לידים
+      <span class="nav-badge" id="badge-l">0</span>
+    </div>
+    <div class="nav-item" tabindex="0" onclick="nav('deals',this)" onkeydown="if(event.key==='Enter')nav('deals',this)">
+      <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="6" height="18" rx="1"/><rect x="9" y="8" width="6" height="13" rx="1"/><rect x="16" y="13" width="6" height="8" rx="1"/></svg>
+      עסקאות
+    </div>
+    <div class="nav-item" tabindex="0" onclick="nav('tasks',this)" onkeydown="if(event.key==='Enter')nav('tasks',this)">
+      <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+      משימות
+      <span class="nav-badge" id="badge-t">0</span>
+    </div>
+    <div class="nav-lbl">ניתוח</div>
+    <div class="nav-item" tabindex="0" onclick="nav('reports',this)" onkeydown="if(event.key==='Enter')nav('reports',this)">
+      <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/><line x1="2" y1="20" x2="22" y2="20"/></svg>
+      דוחות
+    </div>
+  </nav>
+  <div class="sb-footer">
+    <div class="user-tile" tabindex="0">
+      <div class="u-av">DK</div>
+      <div style="flex:1">
+        <div class="u-name">David King</div>
+        <div class="u-role">מנהל מכירות</div>
+      </div>
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#475569" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14M4.93 4.93a10 10 0 0 0 0 14.14"/></svg>
+    </div>
+  </div>
+</aside>
+
+<!-- MAIN -->
+<div class="main">
+  <header class="topbar">
+    <div class="page-title" id="page-title">לוח בקרה</div>
+    <div class="topbar-actions">
+      <div class="search-wrap" onclick="document.getElementById('gsearch').focus()">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#475569" stroke-width="2.2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        <input type="search" id="gsearch" placeholder="חיפוש..." oninput="onSearch(this.value)" autocomplete="off">
+      </div>
+      <button class="btn btn-ghost btn-icon" id="theme-btn" onclick="toggleTheme()" title="החלף מצב תאורה" aria-label="החלף מצב תאורה">
+        <svg id="theme-icon-dark" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+        <svg id="theme-icon-light" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="display:none"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
+      </button>
+      <div class="kbd-hint" onclick="openCmd()" title="Command Palette (Ctrl+K)">⌘K</div>
+      <button class="btn btn-primary" id="add-btn" onclick="openAddModal()">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        <span id="add-lbl">הוסף</span>
+      </button>
+    </div>
+  </header>
+
+  <main class="content">
+
+    <!-- DASHBOARD -->
+    <section class="page active" id="page-dashboard">
+      <div class="stats-grid">
+        <div class="stat-card">
+          <div class="stat-icon" style="background:var(--accent-dim)"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#5B7CF6" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></svg></div>
+          <div class="stat-lbl">אנשי קשר</div>
+          <div class="stat-val" id="s-c">0</div>
+          <div class="stat-delta up" id="s-c-delta">↑ 12% מהחודש שעבר</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon" style="background:var(--amber-dim)"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#F59E0B" stroke-width="2"><rect x="2" y="3" width="6" height="18" rx="1"/><rect x="9" y="8" width="6" height="13" rx="1"/><rect x="16" y="13" width="6" height="8" rx="1"/></svg></div>
+          <div class="stat-lbl">עסקאות פעילות</div>
+          <div class="stat-val" id="s-d">0</div>
+          <div class="stat-delta up" id="s-d-delta">↑ 4 חדשות השבוע</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon" style="background:var(--green-dim)"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#22C55E" stroke-width="2"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg></div>
+          <div class="stat-lbl">הכנסה צפויה</div>
+          <div class="stat-val" id="s-r">₪0</div>
+          <div class="stat-delta up">↑ 23% לעומת יעד</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon" style="background:var(--purple-dim)"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#A78BFA" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></div>
+          <div class="stat-lbl">ממוצע ימי עסקה</div>
+          <div class="stat-val" id="s-days">28</div>
+          <div class="stat-delta neutral" id="s-days-delta">ממוצע כל העסקאות</div>
+        </div>
+      </div>
+
+      <!-- FORECAST STRIP -->
+      <div class="card" style="margin-bottom:18px;padding:14px 18px">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
+          <div style="font-family:'Urbanist',sans-serif;font-weight:700;font-size:13px">תחזית רבעון נוכחי</div>
+          <div style="font-size:12px;color:var(--text3)">יעד: <span style="color:var(--text);font-weight:600">₪1,500,000</span></div>
+        </div>
+        <div style="display:flex;align-items:center;gap:12px">
+          <div style="font-family:'Urbanist',sans-serif;font-weight:800;font-size:20px;color:var(--green)" id="forecast-val">₪0</div>
+          <div style="flex:1">
+            <div class="forecast-bar"><div class="forecast-fill" id="forecast-fill" style="width:0%"></div></div>
+            <div style="font-size:11px;color:var(--text3);margin-top:4px"><span id="forecast-pct">0</span>% מהיעד</div>
+          </div>
+          <div class="badge b-green" id="forecast-badge">על המסלול</div>
+        </div>
+      </div>
+
+      <div class="g2-3">
+        <div class="card">
+          <div class="card-hd">
+            <div><div class="card-title">הכנסות חודשיות</div><div class="card-sub">6 חודשים אחרונים</div></div>
+          </div>
+          <div class="chart-wrap"><canvas id="c-rev"></canvas></div>
+        </div>
+        <div class="card">
+          <div class="card-hd"><div><div class="card-title">פייפליין</div><div class="card-sub">עסקאות + שווי לפי שלב</div></div></div>
+          <div class="pipe-rows" id="pipe-rows"></div>
+        </div>
+      </div>
+
+      <div class="g1-1">
+        <div class="card">
+          <div class="card-hd"><div class="card-title">פעילות אחרונה</div></div>
+          <div class="act-feed" id="act-feed"></div>
+        </div>
+        <div class="card">
+          <div class="card-hd"><div class="card-title">התפלגות עסקאות</div></div>
+          <div class="chart-wrap" style="height:155px;margin-bottom:12px"><canvas id="c-donut"></canvas></div>
+          <div id="donut-stats"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- CONTACTS -->
+    <section class="page" id="page-contacts">
+      <div class="tbl-toolbar">
+        <div class="tab-pills">
+          <button class="tab-pill active" onclick="filterC('all',this)">הכל</button>
+          <button class="tab-pill" onclick="filterC('active',this)">פעיל</button>
+          <button class="tab-pill" onclick="filterC('lead',this)">ליד</button>
+          <button class="tab-pill" onclick="filterC('inactive',this)">לא פעיל</button>
+        </div>
+        <div style="flex:1"></div>
+        <select class="f-sel" id="sort-sel" onchange="renderContacts()" style="width:auto;height:34px;font-size:12px">
+          <option value="date-desc">מיון: חדש ראשון</option>
+          <option value="date-asc">מיון: ישן ראשון</option>
+          <option value="name-asc">מיון: שם א-ת</option>
+          <option value="name-desc">מיון: שם ת-א</option>
+        </select>
+        <button class="btn btn-ghost btn-sm" onclick="exportContacts()" title="ייצוא CSV"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg> ייצוא</button>
+      </div>
+      <div class="tbl-card">
+        <table class="data-tbl">
+          <thead>
+            <tr>
+              <th>שם לקוח</th>
+              <th>סטטוס</th>
+              <th>מנהל לקוח</th>
+              <th>דואר אלקטרוני</th>
+              <th>טלפון</th>
+              <th>מקור הגעה</th>
+              <th>סוג לקוח</th>
+              <th>נוצר בתאריך</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody id="ctbl-body"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- LEADS -->
+    <section class="page" id="page-leads">
+      <div class="leads-layout">
+        <div class="leads-sidebar" id="leads-sidebar"></div>
+        <div class="leads-main">
+          <div class="leads-toolbar">
+            <div class="search-wrap" style="height:32px" onclick="document.getElementById('leads-search').focus()">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#475569" stroke-width="2.2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+              <input type="search" id="leads-search" placeholder="חיפוש ליד..." oninput="renderLeadsTable()" style="width:150px" autocomplete="off">
+            </div>
+            <div style="flex:1"></div>
+            <span style="font-size:12px;color:var(--text3)">סה"כ: <span id="leads-total" style="font-family:'Urbanist',sans-serif;font-weight:700;color:var(--text)">0</span></span>
+            <button class="btn btn-ghost btn-sm" onclick="exportLeads()" title="ייצוא CSV"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg> ייצוא</button>
+          </div>
+          <div id="leads-table-wrap"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- DEALS -->
+    <section class="page" id="page-deals">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
+        <div style="display:flex;gap:8px;align-items:center">
+          <div style="font-size:13px;color:var(--text3)">סה"כ פייפליין: <span style="font-family:'Urbanist',sans-serif;font-weight:700;color:var(--text)" id="pipeline-total">₪0</span></div>
+        </div>
+        <div class="view-toggle">
+          <button class="vt-btn active" id="vt-kanban" onclick="setDealView('kanban')" title="תצוגת קנבאן">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="5" height="18" rx="1"/><rect x="10" y="3" width="5" height="18" rx="1"/><rect x="17" y="3" width="4" height="18" rx="1"/></svg>
+          </button>
+          <button class="vt-btn" id="vt-list" onclick="setDealView('list')" title="תצוגת רשימה">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
+          </button>
+        </div>
+      </div>
+      <div id="deals-view"></div>
+    </section>
+
+    <!-- TASKS -->
+    <section class="page" id="page-tasks">
+      <div class="tasks-wrap">
+        <div>
+          <div class="sec-lbl">היום<div class="sec-line"></div></div>
+          <div id="t-today"></div>
+          <div class="sec-lbl" style="margin-top:18px">קרוב<div class="sec-line"></div></div>
+          <div id="t-upcoming"></div>
+          <div class="sec-lbl" style="margin-top:18px">הושלמו<div class="sec-line"></div></div>
+          <div id="t-done"></div>
+        </div>
+        <div>
+          <div class="card" style="margin-bottom:10px">
+            <div class="card-hd" style="margin-bottom:12px"><div class="card-title">סיכום</div></div>
+            <div id="t-summary"></div>
+          </div>
+          <div class="card">
+            <div class="card-hd" style="margin-bottom:12px"><div class="card-title">עדיפות</div></div>
+            <div class="chart-wrap" style="height:130px"><canvas id="c-tasks-pie"></canvas></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- REPORTS -->
+    <section class="page" id="page-reports">
+      <div class="reports-grid">
+        <div class="card"><div class="card-hd"><div class="card-title">ביצועים מול יעד</div></div><div class="chart-wrap"><canvas id="r1"></canvas></div></div>
+        <div class="card"><div class="card-hd"><div class="card-title">מקורות לידים</div></div><div class="chart-wrap"><canvas id="r2"></canvas></div></div>
+        <div class="card"><div class="card-hd"><div class="card-title">המרה לפי שלב</div></div><div class="chart-wrap"><canvas id="r3"></canvas></div></div>
+        <div class="card"><div class="card-hd"><div class="card-title">ממוצע עסקה חודשי</div></div><div class="chart-wrap"><canvas id="r4"></canvas></div></div>
+      </div>
+    </section>
+
+  </main>
+</div>
+
+<!-- CONTACT DRAWER -->
+<div class="drawer-overlay" id="drawer-overlay" onclick="if(event.target===this)closeDrawer()">
+  <div class="drawer" id="drawer">
+    <div class="drawer-head">
+      <div class="drawer-av" id="dr-av">DL</div>
+      <div class="drawer-info">
+        <div class="drawer-name" id="dr-name">—</div>
+        <div class="drawer-co" id="dr-co">—</div>
+        <div style="display:flex;gap:6px;margin-top:8px" id="dr-badges"></div>
+      </div>
+      <button class="drawer-close" onclick="closeDrawer()">✕</button>
+    </div>
+    <div class="drawer-tabs">
+      <div class="dtab active" onclick="drawerTab('info',this)">פרטים</div>
+      <div class="dtab" onclick="drawerTab('notes',this)">הערות</div>
+      <div class="dtab" onclick="drawerTab('deals',this)">עסקאות</div>
+      <div class="dtab" onclick="drawerTab('activity',this)">פעילות</div>
+    </div>
+    <div class="drawer-body" id="drawer-body"></div>
+  </div>
+</div>
+
+<!-- DEAL DRAWER -->
+<div class="drawer-overlay" id="deal-drawer-overlay" onclick="if(event.target===this)closeDealDrawer()">
+  <div class="drawer" id="deal-drawer">
+    <div class="drawer-head">
+      <div class="drawer-av" id="dd-av" style="border-radius:10px;font-size:20px;background:var(--amber-dim)">💼</div>
+      <div class="drawer-info">
+        <div class="drawer-name" id="dd-name">—</div>
+        <div class="drawer-co" id="dd-co">—</div>
+        <div style="display:flex;gap:6px;margin-top:8px" id="dd-badges"></div>
+      </div>
+      <button class="drawer-close" onclick="closeDealDrawer()">✕</button>
+    </div>
+    <div class="drawer-tabs">
+      <div class="dtab active" onclick="dealDrawerTab('info',this)">פרטים</div>
+      <div class="dtab" onclick="dealDrawerTab('notes',this)">הערות</div>
+    </div>
+    <div class="drawer-body" id="deal-drawer-body"></div>
+  </div>
+</div>
+
+<!-- COMMAND PALETTE -->
+<div class="cmd-overlay" id="cmd-overlay" onclick="if(event.target===this)closeCmd()">
+  <div class="cmd-box">
+    <div class="cmd-search-wrap">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#64748B" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+      <input class="cmd-input" id="cmd-input" placeholder="חפש, נווט, הוסף..." oninput="renderCmd(this.value)" onkeydown="cmdKey(event)">
+    </div>
+    <div class="cmd-results" id="cmd-results"></div>
+    <div class="cmd-footer">
+      <div class="cmd-hint"><span class="cmd-key">↑↓</span> ניווט</div>
+      <div class="cmd-hint"><span class="cmd-key">Enter</span> בחר</div>
+      <div class="cmd-hint"><span class="cmd-key">Esc</span> סגור</div>
+    </div>
+  </div>
+</div>
+
+<!-- MODALS -->
+<div class="modal-bg" id="modal-c">
+  <div class="modal-box">
+    <div class="modal-hd"><div class="modal-title">איש קשר חדש</div><button class="modal-close" onclick="closeModal('modal-c')">✕</button></div>
+    <div class="f-row">
+      <div class="f-group"><label class="f-lbl" for="cf-fn">שם פרטי</label><input class="f-in" id="cf-fn" placeholder="ישראל"></div>
+      <div class="f-group"><label class="f-lbl" for="cf-ln">שם משפחה</label><input class="f-in" id="cf-ln" placeholder="ישראלי"></div>
+    </div>
+    <div class="f-group"><label class="f-lbl" for="cf-co">חברה</label><input class="f-in" id="cf-co" placeholder="שם החברה"></div>
+    <div class="f-row">
+      <div class="f-group"><label class="f-lbl" for="cf-ph">טלפון</label><input class="f-in" id="cf-ph" type="tel" placeholder="050-0000000"></div>
+      <div class="f-group"><label class="f-lbl" for="cf-em">אימייל</label><input class="f-in" id="cf-em" type="email" placeholder="mail@co.il"></div>
+    </div>
+    <div class="f-row">
+      <div class="f-group"><label class="f-lbl" for="cf-st">סטטוס</label><select class="f-sel" id="cf-st"><option value="active">פעיל</option><option value="inactive">לא פעיל</option></select></div>
+      <div class="f-group"><label class="f-lbl" for="cf-tp">סוג לקוח</label><select class="f-sel" id="cf-tp"><option value="פרטי">לקוח פרטי</option><option value="עסקי">לקוח עסקי</option></select></div>
+    </div>
+    <div class="f-group"><label class="f-lbl" for="cf-sr">מקור הגעה</label><select class="f-sel" id="cf-sr"><option value="הפניה">הפניה</option><option value="Facebook">Facebook</option><option value="Instagram">Instagram</option><option value="WhatsApp">WhatsApp</option><option value="Google">Google</option><option value="LinkedIn">LinkedIn</option><option value="אתר">אתר</option><option value="אירוע">אירוע</option><option value="קר">פנייה קרה</option></select></div>
+    <div class="modal-foot"><button class="btn btn-primary" onclick="saveContact()">שמור</button><button class="btn btn-ghost" onclick="closeModal('modal-c')">ביטול</button></div>
+  </div>
+</div>
+
+<div class="modal-bg" id="modal-d">
+  <div class="modal-box">
+    <div class="modal-hd"><div class="modal-title">עסקה חדשה</div><button class="modal-close" onclick="closeModal('modal-d')">✕</button></div>
+    <div class="f-group"><label class="f-lbl" for="df-nm">שם העסקה</label><input class="f-in" id="df-nm" placeholder="פרויקט / הזדמנות"></div>
+    <div class="f-group"><label class="f-lbl" for="df-co">לקוח</label><input class="f-in" id="df-co" placeholder="שם הלקוח"></div>
+    <div class="f-row">
+      <div class="f-group"><label class="f-lbl" for="df-vl">שווי ₪</label><input class="f-in" id="df-vl" type="number" placeholder="50000"></div>
+      <div class="f-group"><label class="f-lbl" for="df-pb">הסתברות %</label><input class="f-in" id="df-pb" type="number" placeholder="60" min="0" max="100"></div>
+    </div>
+    <div class="f-row">
+      <div class="f-group"><label class="f-lbl" for="df-sg">שלב</label><select class="f-sel" id="df-sg"><option value="ליד">ליד</option><option value="הצעה">הצעה</option><option value="משא ומתן">משא ומתן</option><option value="הצעת מחיר">הצעת מחיר</option></select></div>
+      <div class="f-group"><label class="f-lbl" for="df-cl">סגירה צפויה</label><input class="f-in" id="df-cl" type="date"></div>
+    </div>
+    <div class="modal-foot"><button class="btn btn-primary" onclick="saveDeal()">שמור</button><button class="btn btn-ghost" onclick="closeModal('modal-d')">ביטול</button></div>
+  </div>
+</div>
+
+<div class="modal-bg" id="modal-t">
+  <div class="modal-box">
+    <div class="modal-hd"><div class="modal-title">משימה חדשה</div><button class="modal-close" onclick="closeModal('modal-t')">✕</button></div>
+    <div class="f-group"><label class="f-lbl" for="tf-ti">כותרת</label><input class="f-in" id="tf-ti" placeholder="תיאור המשימה"></div>
+    <div class="f-row">
+      <div class="f-group"><label class="f-lbl" for="tf-pr">עדיפות</label><select class="f-sel" id="tf-pr"><option value="high">גבוהה</option><option value="medium">בינונית</option><option value="low">נמוכה</option></select></div>
+      <div class="f-group"><label class="f-lbl" for="tf-du">תאריך יעד</label><input class="f-in" id="tf-du" type="date"></div>
+    </div>
+    <div class="f-group"><label class="f-lbl" for="tf-rl">קשור ל</label><input class="f-in" id="tf-rl" placeholder="לקוח / עסקה"></div>
+    <div class="modal-foot"><button class="btn btn-primary" onclick="saveTask()">שמור</button><button class="btn btn-ghost" onclick="closeModal('modal-t')">ביטול</button></div>
+  </div>
+</div>
+
+<div class="modal-bg" id="modal-l">
+  <div class="modal-box">
+    <div class="modal-hd"><div class="modal-title">ליד חדש</div><button class="modal-close" onclick="closeModal('modal-l')">✕</button></div>
+    <div class="f-row">
+      <div class="f-group"><label class="f-lbl" for="lf-fn">שם פרטי</label><input class="f-in" id="lf-fn" placeholder="ישראל"></div>
+      <div class="f-group"><label class="f-lbl" for="lf-ln">שם משפחה</label><input class="f-in" id="lf-ln" placeholder="ישראלי"></div>
+    </div>
+    <div class="f-row">
+      <div class="f-group"><label class="f-lbl" for="lf-ph">טלפון</label><input class="f-in" id="lf-ph" type="tel" placeholder="050-0000000"></div>
+      <div class="f-group"><label class="f-lbl" for="lf-co">חברה</label><input class="f-in" id="lf-co" placeholder="שם החברה"></div>
+    </div>
+    <div class="f-row">
+      <div class="f-group"><label class="f-lbl" for="lf-sr">מקור הגעה</label><select class="f-sel" id="lf-sr"><option value="הפניה">הפניה</option><option value="Facebook">Facebook</option><option value="Instagram">Instagram</option><option value="WhatsApp">WhatsApp</option><option value="Google">Google</option><option value="LinkedIn">LinkedIn</option><option value="אתר">אתר</option><option value="אירוע">אירוע</option><option value="קר">פנייה קרה</option></select></div>
+      <div class="f-group"><label class="f-lbl" for="lf-tp">סוג לקוח</label><select class="f-sel" id="lf-tp"><option value="פרטי">לקוח פרטי</option><option value="עסקי">לקוח עסקי</option></select></div>
+    </div>
+    <div class="f-group"><label class="f-lbl" for="lf-sg">שלב</label><select class="f-sel" id="lf-sg"><option value="חדש">חדש</option><option value="ניסיון קשר">ניסיון קשר</option><option value="לא ענה">לא ענה</option><option value="פולואפ">פולואפ</option><option value="מוכשר">מוכשר</option></select></div>
+    <div class="modal-foot"><button class="btn btn-primary" onclick="saveLead()">שמור</button><button class="btn btn-ghost" onclick="closeModal('modal-l')">ביטול</button></div>
+  </div>
+</div>
+
+<div class="toast-wrap" id="toast-wrap" aria-live="polite"></div>
+
+<script>
+/* ─── DATA ─── */
+const DB={contacts:[],deals:[],tasks:[]};
+const AVC=['#5B7CF6','#A78BFA','#F59E0B','#22C55E','#EF4444','#06B6D4','#F97316','#EC4899'];
+const STAGES=[{name:'ליד',color:'#64748B'},{name:'הצעה',color:'#F59E0B'},{name:'הצעת מחיר',color:'#A78BFA'},{name:'משא ומתן',color:'#5B7CF6'}];
+const LEAD_STAGES=[{name:'חדש',color:'#64748B'},{name:'ניסיון קשר',color:'#5B7CF6'},{name:'לא ענה',color:'#EF4444'},{name:'פולואפ',color:'#F59E0B'},{name:'מוכשר',color:'#22C55E'}];
+const STATUS_BADGE={active:'<span class="badge b-green">פעיל</span>',lead:'<span class="badge b-amber">ליד</span>',inactive:'<span class="badge b-red">לא פעיל</span>'};
+const PRI_CLR={high:'#EF4444',medium:'#F59E0B',low:'#22C55E'};
+const PRI_LBL={high:'גבוהה',medium:'בינונית',low:'נמוכה'};
+const CTICK={color:'#64748B',font:{family:'DM Sans',size:11,weight:'500'}};
+const CGRID={color:'rgba(148,163,184,0.07)'};
+
+let charts={},actLog=[],cFilter='all',dealView='kanban',curPage='dashboard',sortKey='date-desc';
+let drawerCid=null,drawerCurTab='info';
+let leadsFilter='all';
+const SRC_CLR={'Facebook':'#1877F2','Instagram':'#E1306C','WhatsApp':'#25D366','Google':'#4285F4','LinkedIn':'#0A66C2','הפניה':'#22C55E','אתר':'#06B6D4','אירוע':'#A78BFA','קר':'#94A3B8'};
+const STAGE_CLR={'חדש':'#94A3B8','ניסיון קשר':'#5B7CF6','לא ענה':'#EF4444','פולואפ':'#F59E0B','מוכשר':'#22C55E'};
+let cmdSel=0,cmdItems=[];
+
+/* ─── PERSIST ─── */
+function persist(){localStorage.setItem('crm_c',JSON.stringify(DB.contacts));localStorage.setItem('crm_d',JSON.stringify(DB.deals));localStorage.setItem('crm_t',JSON.stringify(DB.tasks))}
+function load(){DB.contacts=JSON.parse(localStorage.getItem('crm_c')||'[]');DB.deals=JSON.parse(localStorage.getItem('crm_d')||'[]');DB.tasks=JSON.parse(localStorage.getItem('crm_t')||'[]')}
+
+/* ─── HELPERS ─── */
+function today(){return new Date().toISOString().split('T')[0]}
+function fd(n){const d=new Date();d.setDate(d.getDate()+n);return d.toISOString().split('T')[0]}
+function fmtD(s){if(!s)return'—';return new Date(s).toLocaleDateString('he-IL',{day:'numeric',month:'short',year:'numeric'})}
+function fmtM(n){return'₪'+Number(n).toLocaleString('he-IL')}
+function avc(i){return AVC[i%AVC.length]}
+function ini(c){return(c.fname[0]||'')+(c.lname[0]||'')}
+function dc(k){if(charts[k]){charts[k].destroy();delete charts[k]}}
+function daysAgo(s){if(!s)return 0;return Math.round((Date.now()-new Date(s).getTime())/(86400000))}
+
+/* ─── SEED ─── */
+function seed(){
+  if(DB.contacts.length)return;
+  DB.contacts=[
+    {id:1,fname:'ישראל',lname:'ישראלי',company:'אלפא טק',phone:'050-1234567',email:'israel@alpha.co.il',status:'active',ctype:'עסקי',source:'הפניה',date:'2026-01-15',notes:[{text:'לקוח VIP, מעדיף תקשורת בוואטסאפ',date:'2026-01-20'}]},
+    {id:2,fname:'שרה',lname:'כהן',company:'בטא סולושנס',phone:'052-2345678',email:'sarah@beta.co.il',status:'lead',leadStage:'ניסיון קשר',source:'Facebook',leadType:'עסקי',date:'2026-02-01',notes:[]},
+    {id:3,fname:'משה',lname:'לוי',company:'גמא גרופ',phone:'054-3456789',email:'moshe@gamma.co.il',status:'active',ctype:'עסקי',source:'Google',date:'2026-02-14',notes:[]},
+    {id:4,fname:'מירה',lname:'דוד',company:'דלתא דיגיטל',phone:'053-4567890',email:'mira@delta.co.il',status:'inactive',ctype:'פרטי',source:'אירוע',date:'2026-03-01',notes:[]},
+    {id:5,fname:'יוסף',lname:'אברהם',company:'אפסילון',phone:'058-5678901',email:'yossi@eps.co.il',status:'active',ctype:'פרטי',source:'Instagram',date:'2026-03-20',notes:[]},
+    {id:6,fname:'רחל',lname:'שמש',company:'זטא זון',phone:'050-6789012',email:'rachel@zeta.co.il',status:'lead',leadStage:'פולואפ',source:'Instagram',leadType:'פרטי',date:'2026-04-05',notes:[]},
+    {id:7,fname:'דוד',lname:'גל',company:'אטא עסקים',phone:'052-7890123',email:'david@eta.co.il',status:'active',ctype:'עסקי',source:'WhatsApp',date:'2026-04-18',notes:[]},
+    {id:8,fname:'נועה',lname:'בן-דוד',company:'קסטה בע"מ',phone:'050-9876543',email:'noa@kesta.co.il',status:'lead',leadStage:'לא ענה',source:'Instagram',leadType:'פרטי',date:'2026-05-05',notes:[]},
+    {id:9,fname:'אמיר',lname:'רוזן',company:'רוזן טק',phone:'054-8765432',email:'amir@rtech.co.il',status:'lead',leadStage:'מוכשר',source:'LinkedIn',leadType:'עסקי',date:'2026-05-10',notes:[]},
+    {id:10,fname:'תמר',lname:'קלמן',company:'פינה טק',phone:'052-7654321',email:'tamar@pina.co.il',status:'lead',leadStage:'חדש',source:'Google',leadType:'עסקי',date:'2026-05-14',notes:[]},
+  ];
+  DB.deals=[
+    {id:1,name:'רישיון ענן תלת-שנתי',company:'אלפא טק',value:180000,prob:75,stage:'משא ומתן',close:'2026-06-30',created:'2026-03-01'},
+    {id:2,name:'מערכת ERP חדשה',company:'בטא סולושנס',value:320000,prob:45,stage:'הצעה',close:'2026-07-15',created:'2026-03-15'},
+    {id:3,name:'ייעוץ אסטרטגי Q3',company:'גמא גרופ',value:95000,prob:90,stage:'הצעת מחיר',close:'2026-05-31',created:'2026-04-01'},
+    {id:4,name:'שדרוג אבטחת מידע',company:'דלתא דיגיטל',value:145000,prob:60,stage:'הצעה',close:'2026-08-01',created:'2026-04-10'},
+    {id:5,name:'מנוי שנתי Premium',company:'אפסילון',value:48000,prob:80,stage:'ליד',close:'2026-06-01',created:'2026-04-20'},
+    {id:6,name:'פרויקט BI ודוחות',company:'זטא זון',value:220000,prob:35,stage:'ליד',close:'2026-09-01',created:'2026-04-25'},
+    {id:7,name:'הטמעת CRM',company:'אטא עסקים',value:75000,prob:70,stage:'משא ומתן',close:'2026-06-15',created:'2026-05-01'},
+  ];
+  DB.tasks=[
+    {id:1,title:'שיחת פולואו-אפ עם ישראל ישראלי',priority:'high',due:today(),related:'אלפא טק',done:false},
+    {id:2,title:'שליחת הצעת מחיר לבטא סולושנס',priority:'high',due:today(),related:'בטא סולושנס',done:false},
+    {id:3,title:'הכנת מצגת לפגישה',priority:'medium',due:fd(2),related:'גמא גרופ',done:false},
+    {id:4,title:'בדיקת חוזה עם יועץ משפטי',priority:'medium',due:fd(3),related:'אלפא טק',done:false},
+    {id:5,title:'עדכון נתוני CRM',priority:'low',due:fd(5),related:'כללי',done:false},
+    {id:6,title:'שיחה ראשונית עם ליד חדש',priority:'high',due:fd(1),related:'זטא זון',done:true},
+  ];
+  persist();
+}
+
+/* ─── NAV ─── */
+const PTITLES={dashboard:'לוח בקרה',contacts:'אנשי קשר',leads:'לידים',deals:'עסקאות',tasks:'משימות',reports:'דוחות'};
+const ALABELS={dashboard:'איש קשר',contacts:'איש קשר',leads:'ליד',deals:'עסקה',tasks:'משימה',reports:'דוח'};
+const AMODALS={dashboard:'modal-c',contacts:'modal-c',leads:'modal-l',deals:'modal-d',tasks:'modal-t',reports:'modal-c'};
+
+function nav(page,el){
+  document.querySelectorAll('.nav-item').forEach(i=>i.classList.remove('active'));
+  el.classList.add('active');
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.getElementById('page-'+page).classList.add('active');
+  curPage=page;
+  document.getElementById('page-title').textContent=PTITLES[page];
+  document.getElementById('add-lbl').textContent=ALABELS[page];
+  document.getElementById('gsearch').value='';
+  if(page==='contacts')renderContacts();
+  if(page==='leads')renderLeads();
+  if(page==='deals'){renderDeals();updatePipelineTotal()}
+  if(page==='tasks')renderTasks();
+  if(page==='reports')renderReports();
+}
+
+function openAddModal(){document.getElementById(AMODALS[curPage]).classList.add('open')}
+function closeModal(id){document.getElementById(id).classList.remove('open')}
+document.querySelectorAll('.modal-bg').forEach(b=>b.addEventListener('click',e=>{if(e.target===b)b.classList.remove('open')}));
+document.addEventListener('keydown',e=>{
+  if((e.ctrlKey||e.metaKey)&&e.key==='k'){e.preventDefault();openCmd()}
+  if(e.key==='Escape'){
+    document.querySelectorAll('.modal-bg.open').forEach(m=>m.classList.remove('open'));
+    closeCmd();closeDrawer();closeDealDrawer();
+  }
+});
+
+/* ─── TOAST ─── */
+function toast(msg,type='ok'){
+  const cols={ok:'#22C55E',err:'#EF4444',info:'#5B7CF6'};
+  const el=document.createElement('div');
+  el.className='toast';
+  el.innerHTML=`<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="${cols[type]}" stroke-width="2.5"><circle cx="12" cy="12" r="10"/></svg> ${msg}`;
+  document.getElementById('toast-wrap').appendChild(el);
+  setTimeout(()=>el.remove(),3200);
+}
+
+/* ─── SEARCH ─── */
+function onSearch(q){if(curPage==='contacts')renderContacts(q)}
+
+/* ─── CONTACTS ─── */
+function filterC(f,el){
+  cFilter=f;
+  document.querySelectorAll('.tab-pill').forEach(t=>t.classList.remove('active'));
+  el.classList.add('active');
+  renderContacts();
+}
+
+function getSortedContacts(list){
+  const k=document.getElementById('sort-sel')?.value||'date-desc';
+  return [...list].sort((a,b)=>{
+    if(k==='date-desc')return new Date(b.date)-new Date(a.date);
+    if(k==='date-asc')return new Date(a.date)-new Date(b.date);
+    if(k==='name-asc')return(a.fname+a.lname).localeCompare(b.fname+b.lname,'he');
+    if(k==='name-desc')return(b.fname+b.lname).localeCompare(a.fname+a.lname,'he');
+    return 0;
+  });
+}
+
+const STATUS_CLR={active:'#22C55E',lead:'#F59E0B',inactive:'#94A3B8'};
+const STATUS_LBL={active:'פעיל',lead:'ליד',inactive:'לא פעיל'};
+
+function renderContacts(q=''){
+  let list=DB.contacts;
+  if(cFilter!=='all')list=list.filter(c=>c.status===cFilter);
+  if(q){const lq=q.toLowerCase();list=list.filter(c=>(c.fname+' '+c.lname+c.company+c.email+c.phone).toLowerCase().includes(lq))}
+  list=getSortedContacts(list);
+  const body=document.getElementById('ctbl-body');
+  if(!list.length){body.innerHTML=`<tr><td colspan="9"><div class="empty"><svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg><p>אין אנשי קשר</p></div></td></tr>`;return}
+  body.innerHTML=list.map((c,i)=>{
+    const sclr=STATUS_CLR[c.status]||'#94A3B8';
+    const slbl=STATUS_LBL[c.status]||c.status;
+    const srcclr=SRC_CLR[c.source]||'#94A3B8';
+    const typeLbl=c.ctype==='עסקי'?'לקוח עסקי':'לקוח פרטי';
+    const typeCls=c.ctype==='עסקי'?'b-blue':'b-purple';
+    return`<tr onclick="openDrawer(${c.id})" tabindex="0" style="cursor:pointer" onkeydown="if(event.key==='Enter')openDrawer(${c.id})">
+      <td><div class="c-cell"><div class="c-av" style="background:${avc(i)}">${ini(c)}</div><div><div class="c-name">${c.fname} ${c.lname}</div></div></div></td>
+      <td><span style="color:${sclr};font-weight:600;font-size:13px">${slbl}</span></td>
+      <td><span style="color:var(--accent);font-weight:500;font-size:13px">David King</span></td>
+      <td style="color:var(--text2)">${c.email}</td>
+      <td style="color:var(--accent);font-weight:500">${c.phone}</td>
+      <td><span style="font-weight:600;color:${srcclr}">${c.source||'—'}</span></td>
+      <td><span class="badge ${typeCls}">${typeLbl}</span></td>
+      <td>${fmtD(c.date)}</td>
+      <td onclick="event.stopPropagation()"><button class="btn btn-ghost btn-sm btn-icon" onclick="deleteContact(${c.id})" aria-label="מחק">
+        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button></td>
+    </tr>`}).join('');
+}
+
+function saveContact(){
+  const fn=document.getElementById('cf-fn').value.trim(),ln=document.getElementById('cf-ln').value.trim();
+  if(!fn||!ln){toast('נא למלא שם','err');return}
+  const phone=document.getElementById('cf-ph').value.trim()||'—';
+  const dup=phone!=='—'&&DB.contacts.find(x=>x.phone===phone);
+  if(dup)toast(`⚠️ טלפון כבר קיים אצל ${dup.fname} ${dup.lname}`,'info');
+  DB.contacts.unshift({id:Date.now(),fname:fn,lname:ln,company:document.getElementById('cf-co').value.trim()||'—',phone,email:document.getElementById('cf-em').value.trim()||'—',status:document.getElementById('cf-st').value,ctype:document.getElementById('cf-tp').value,source:document.getElementById('cf-sr').value,date:today(),notes:[]});
+  persist();closeModal('modal-c');renderContacts();updateBadges();updateDash();
+  pushAct(`איש קשר חדש: <strong>${fn} ${ln}</strong>`,'#5B7CF6');
+  toast(`${fn} ${ln} נוסף`);
+  ['cf-fn','cf-ln','cf-co','cf-ph','cf-em'].forEach(id=>document.getElementById(id).value='');
+}
+
+function deleteContact(id){
+  const c=DB.contacts.find(x=>x.id===id);
+  DB.contacts=DB.contacts.filter(x=>x.id!==id);
+  persist();renderContacts();updateBadges();updateDash();
+  if(c)toast(`${c.fname} ${c.lname} נמחק`,'err');
+}
+
+/* ─── LEADS ─── */
+function renderLeads(){
+  renderLeadsSidebar();
+  renderLeadsTable();
+}
+
+function renderLeadsSidebar(){
+  const el=document.getElementById('leads-sidebar');if(!el)return;
+  const all=DB.contacts.filter(c=>c.status==='lead');
+  let html=`<div class="ls-lbl">תצוגות</div>`;
+  html+=`<div class="ls-item${leadsFilter==='all'?' active':''}" onclick="setLeadsFilter('all')"><span style="flex:1">כל הלידים</span><span class="ls-cnt">${all.length}</span></div>`;
+  html+=`<div class="ls-sep"></div><div class="ls-lbl">שלבים</div>`;
+  LEAD_STAGES.forEach(s=>{
+    const cnt=all.filter(c=>(c.leadStage||'חדש')===s.name).length;
+    html+=`<div class="ls-item${leadsFilter===s.name?' active':''}" onclick="setLeadsFilter('${s.name}')">
+      <span style="width:7px;height:7px;border-radius:50%;background:${s.color};flex-shrink:0;display:inline-block"></span>
+      <span style="flex:1">${s.name}</span>
+      <span class="ls-cnt">${cnt}</span>
+    </div>`;
+  });
+  el.innerHTML=html;
+}
+
+function setLeadsFilter(f){
+  leadsFilter=f;
+  renderLeads();
+}
+
+function renderLeadsTable(){
+  let list=DB.contacts.filter(c=>c.status==='lead');
+  if(leadsFilter!=='all')list=list.filter(c=>(c.leadStage||'חדש')===leadsFilter);
+  const q=(document.getElementById('leads-search')?.value||'').toLowerCase();
+  if(q)list=list.filter(c=>(c.fname+' '+c.lname+c.company+c.phone).toLowerCase().includes(q));
+  const tot=document.getElementById('leads-total');if(tot)tot.textContent=list.length;
+  const wrap=document.getElementById('leads-table-wrap');if(!wrap)return;
+  if(!list.length){wrap.innerHTML=`<div class="empty"><svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></svg><p>אין לידים בשלב זה</p></div>`;return}
+  wrap.innerHTML=`<div class="tbl-card" style="border-radius:var(--r)"><table class="data-tbl"><thead><tr>
+    <th>שם ליד</th><th>סטטוס</th><th>טלפון</th><th>מקור הגעה</th><th>סוג לקוח</th><th>נוצר בתאריך</th><th></th>
+  </tr></thead><tbody>${list.map((c,i)=>{
+    const stage=c.leadStage||'חדש';
+    const sclr=STAGE_CLR[stage]||'#94A3B8';
+    const srcclr=SRC_CLR[c.source]||'#94A3B8';
+    const typeLabel=c.leadType==='עסקי'?'לקוח עסקי':'לקוח פרטי';
+    const typeCls=c.leadType==='עסקי'?'b-blue':'b-purple';
+    const stageOpts=LEAD_STAGES.map(s=>`<option value="${s.name}"${stage===s.name?' selected':''}>${s.name}</option>`).join('');
+    return`<tr onclick="openDrawer(${c.id})" tabindex="0" style="cursor:pointer" onkeydown="if(event.key==='Enter')openDrawer(${c.id})">
+      <td><div class="c-cell"><div class="c-av" style="background:${avc(i)}">${ini(c)}</div><div><div class="c-name">${c.fname} ${c.lname}</div></div></div></td>
+      <td onclick="event.stopPropagation()"><div style="display:flex;align-items:center;gap:5px"><span style="width:7px;height:7px;border-radius:50%;background:${sclr};flex-shrink:0"></span><select class="stage-sel" style="color:${sclr}" onchange="setLeadStage(${c.id},this.value)">${stageOpts}</select></div></td>
+      <td style="color:var(--accent);font-weight:500">${c.phone}</td>
+      <td><span style="font-weight:600;color:${srcclr}">${c.source||'—'}</span></td>
+      <td><span class="badge ${typeCls}">${typeLabel}</span></td>
+      <td>${fmtD(c.date)}</td>
+      <td onclick="event.stopPropagation()"><div style="display:flex;gap:5px">
+        <button class="btn btn-primary btn-sm" onclick="convertLead(${c.id})">המר</button>
+        <button class="btn btn-red btn-sm btn-icon" onclick="deleteLead(${c.id})" aria-label="מחק"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+      </div></td>
+    </tr>`}).join('')}</tbody></table></div>`;
+}
+
+function setLeadStage(id,stage){
+  const c=DB.contacts.find(x=>x.id===id);if(!c)return;
+  c.leadStage=stage;
+  persist();renderLeads();
+  toast(`${c.fname} הועבר ל${stage}`);
+}
+
+function convertLead(id){
+  const c=DB.contacts.find(x=>x.id===id);if(!c)return;
+  c.status='active';
+  delete c.leadStage;
+  persist();renderLeads();updateBadges();updateDash();
+  pushAct(`ליד <strong>${c.fname} ${c.lname}</strong> הומר לאיש קשר`,'#22C55E');
+  toast(`${c.fname} ${c.lname} הומר לאיש קשר`);
+}
+
+function deleteLead(id){
+  const c=DB.contacts.find(x=>x.id===id);
+  DB.contacts=DB.contacts.filter(x=>x.id!==id);
+  persist();renderLeads();updateBadges();updateDash();
+  if(c)toast(`${c.fname} ${c.lname} נמחק`,'err');
+}
+
+function saveLead(){
+  const fn=document.getElementById('lf-fn').value.trim(),ln=document.getElementById('lf-ln').value.trim();
+  if(!fn||!ln){toast('נא למלא שם','err');return}
+  const _lph=document.getElementById('lf-ph').value.trim()||'—';
+  const _ldup=_lph!=='—'&&DB.contacts.find(x=>x.phone===_lph);
+  if(_ldup)toast(`⚠️ טלפון כבר קיים אצל ${_ldup.fname} ${_ldup.lname}`,'info');
+  DB.contacts.unshift({id:Date.now(),fname:fn,lname:ln,company:document.getElementById('lf-co').value.trim()||'—',phone:_lph,email:'—',status:'lead',leadStage:document.getElementById('lf-sg').value,leadType:document.getElementById('lf-tp').value,source:document.getElementById('lf-sr').value,date:today(),notes:[]});
+  persist();closeModal('modal-l');renderLeads();updateBadges();updateDash();
+  pushAct(`ליד חדש: <strong>${fn} ${ln}</strong>`,'#F59E0B');
+  toast(`${fn} ${ln} נוסף כליד`);
+  ['lf-fn','lf-ln','lf-co','lf-ph'].forEach(id=>document.getElementById(id).value='');
+}
+
+/* ─── CONTACT DRAWER ─── */
+function openDrawer(id){
+  const c=DB.contacts.find(x=>x.id===id);
+  if(!c)return;
+  drawerCid=id;
+  const idx=DB.contacts.indexOf(c);
+  document.getElementById('dr-av').textContent=ini(c);
+  document.getElementById('dr-av').style.background=avc(idx);
+  document.getElementById('dr-name').textContent=c.fname+' '+c.lname;
+  document.getElementById('dr-co').textContent=c.company;
+  document.getElementById('dr-badges').innerHTML=(STATUS_BADGE[c.status]||'');
+  drawerTab('info',document.querySelector('.dtab'));
+  document.getElementById('drawer-overlay').classList.add('open');
+}
+
+function closeDrawer(){
+  document.getElementById('drawer-overlay').classList.remove('open');
+  drawerCid=null;
+}
+
+function drawerTab(tab,el){
+  drawerCurTab=tab;
+  document.querySelectorAll('.dtab').forEach(t=>t.classList.remove('active'));
+  el.classList.add('active');
+  const c=DB.contacts.find(x=>x.id===drawerCid);
+  if(!c)return;
+  const body=document.getElementById('drawer-body');
+  if(tab==='info'){
+    body.innerHTML=`
+      <div class="d-field"><div class="d-field-lbl">טלפון</div><div class="d-field-val">${c.phone}</div></div>
+      <div class="d-field"><div class="d-field-lbl">אימייל</div><div class="d-field-val" style="color:var(--accent)">${c.email}</div></div>
+      <div class="d-field"><div class="d-field-lbl">חברה</div><div class="d-field-val">${c.company}</div></div>
+      <div class="d-field"><div class="d-field-lbl">תאריך הוספה</div><div class="d-field-val">${fmtD(c.date)}</div></div>
+      <div class="d-field"><div class="d-field-lbl">סטטוס</div><div class="d-field-val">${STATUS_BADGE[c.status]||''}</div></div>
+      <div class="d-section-title">פעולות מהירות</div>
+      <div class="quick-actions">
+        <button class="btn btn-ghost btn-sm" onclick="toast('מתקשר ל-${c.phone}','info')"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 12 19.79 19.79 0 0 1 1.63 3.18 2 2 0 0 1 3.6 1h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L7.91 8.61a16 16 0 0 0 6 6l.92-.92a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/></svg> שיחה</button>
+        <button class="btn btn-ghost btn-sm" onclick="toast('שולח מייל','info')"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg> מייל</button>
+        <button class="btn btn-ghost btn-sm" onclick="document.getElementById('tf-rl').value='${c.fname} ${c.lname}';closeDrawer();document.getElementById('modal-t').classList.add('open')"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg> משימה</button>
+      </div>`;
+  } else if(tab==='notes'){
+    const notes=c.notes||[];
+    body.innerHTML=`
+      <textarea class="note-input" id="note-inp" rows="3" placeholder="הוסף הערה..."></textarea>
+      <button class="btn btn-primary btn-sm" style="margin:8px 0 14px" onclick="saveNote()">שמור הערה</button>
+      ${notes.length?notes.map(n=>`<div class="note-item"><div class="note-text">${n.text}</div><div class="note-date">${fmtD(n.date)}</div></div>`).join(''):'<div style="color:var(--text3);font-size:13px">אין הערות עדיין</div>'}`;
+  } else if(tab==='deals'){
+    const deals=DB.deals.filter(d=>d.company===c.company);
+    body.innerHTML=deals.length?deals.map(d=>`
+      <div class="drawer-deal-item">
+        <div class="ddi-name">${d.name}</div>
+        <div class="ddi-meta"><span>${STAGES.find(s=>s.name===d.stage)?.name||d.stage}</span><span style="font-family:'Urbanist',sans-serif;font-weight:700;color:var(--text)">${fmtM(d.value)}</span></div>
+      </div>`).join(''):'<div style="color:var(--text3);font-size:13px">אין עסקאות מקושרות</div>';
+  } else if(tab==='activity'){
+    body.innerHTML=`
+      <div class="act-row"><div class="act-dot" style="background:#5B7CF6"></div><div class="act-text">איש קשר נוסף למערכת</div><div class="act-time">${fmtD(c.date)}</div></div>
+      <div class="act-row"><div class="act-dot" style="background:#22C55E"></div><div class="act-text">סטטוס עודכן ל<strong>${c.status==='active'?'פעיל':c.status==='lead'?'ליד':'לא פעיל'}</strong></div><div class="act-time">${fmtD(c.date)}</div></div>`;
+  }
+}
+
+function saveNote(){
+  const c=DB.contacts.find(x=>x.id===drawerCid);
+  if(!c)return;
+  const text=document.getElementById('note-inp')?.value.trim();
+  if(!text){toast('הערה ריקה','err');return}
+  if(!c.notes)c.notes=[];
+  c.notes.unshift({text,date:today()});
+  persist();
+  drawerTab('notes',document.querySelectorAll('.dtab')[1]);
+  toast('הערה נשמרה');
+}
+
+/* ─── DEALS ─── */
+function updatePipelineTotal(){
+  const total=DB.deals.reduce((s,d)=>s+d.value,0);
+  const el=document.getElementById('pipeline-total');
+  if(el)el.textContent=fmtM(total);
+}
+
+function setDealView(v){
+  dealView=v;
+  document.getElementById('vt-kanban').classList.toggle('active',v==='kanban');
+  document.getElementById('vt-list').classList.toggle('active',v==='list');
+  renderDeals();
+}
+
+function renderDeals(){
+  if(dealView==='kanban')renderKanban();
+  else renderDealList();
+}
+
+function renderKanban(){
+  const el=document.getElementById('deals-view');
+  el.innerHTML=`<div class="kanban-wrap">${STAGES.map(stage=>{
+    const cards=DB.deals.filter(d=>d.stage===stage.name);
+    const total=cards.reduce((s,d)=>s+d.value,0);
+    const age=cards.map(d=>daysAgo(d.created));
+    return`<div class="k-col">
+      <div class="k-col-head">
+        <div class="k-col-meta">
+          <div class="k-col-title"><div class="k-dot" style="background:${stage.color}"></div>${stage.name}</div>
+          <div class="k-cnt">${cards.length}</div>
+        </div>
+        <div class="k-col-total">${fmtM(total)}</div>
+      </div>
+      <div class="k-cards" ondragover="dragOverCol(event)" ondragleave="dragLeaveCol(event)" ondrop="dropDeal(event,'${stage.name}')">
+        ${cards.map((d,i)=>{
+          const probColor=d.prob>=70?'#22C55E':d.prob>=40?'#F59E0B':'#EF4444';
+          const daysSince=daysAgo(d.created);
+          const isOld=daysSince>30;
+          return`<div class="deal-card" tabindex="0" draggable="true" ondragstart="dragStart(event,${d.id})" ondragend="dragEnd(event)" onclick="openDealDrawer(${d.id})" onkeydown="if(event.key==='Enter')openDealDrawer(${d.id})">
+            <div class="d-name">${d.name}</div>
+            <div class="d-co">${d.company}</div>
+            <div class="d-prob-bar"><div class="d-prob-fill" style="width:${d.prob}%;background:${probColor}"></div></div>
+            <div class="d-meta">
+              <div class="d-val">${fmtM(d.value)}</div>
+              <div class="d-prob-txt">${d.prob}%</div>
+            </div>
+            <div class="d-foot">
+              <div class="d-owner" style="background:${avc(i)}">${d.company[0]}</div>
+              <div class="d-age ${isOld?'hot':'ok'}">${daysSince}ד</div>
+              <div class="d-date">${fmtD(d.close)}</div>
+            </div>
+          </div>`}).join('')}
+        <button class="k-add-btn" onclick="document.getElementById('df-sg').value='${stage.name}';document.getElementById('modal-d').classList.add('open')">
+          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg> הוסף
+        </button>
+      </div>
+    </div>`}).join('')}</div>`;
+}
+
+function renderDealList(){
+  const el=document.getElementById('deals-view');
+  if(!DB.deals.length){el.innerHTML=`<div class="tbl-card"><div class="empty"><svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2" y="3" width="6" height="18" rx="1"/><rect x="9" y="8" width="6" height="13" rx="1"/><rect x="16" y="13" width="6" height="8" rx="1"/></svg><p>אין עסקאות</p></div></div>`;return}
+  el.innerHTML=`<div class="tbl-card"><table class="data-tbl"><thead><tr><th>שם</th><th>לקוח</th><th>שווי</th><th>הסתברות</th><th>שלב</th><th>סגירה</th></tr></thead><tbody>
+    ${DB.deals.map((d,i)=>{
+      const s=STAGES.find(x=>x.name===d.stage);
+      const pc=d.prob>=70?'var(--green)':d.prob>=40?'var(--amber)':'var(--red)';
+      return`<tr onclick="toast('${d.name}','info')" tabindex="0">
+        <td><div class="c-cell"><div class="c-av" style="background:${avc(i)}">${d.company[0]}</div><div><div class="c-name">${d.name}</div><div class="c-co">${d.company}</div></div></div></td>
+        <td>${d.company}</td>
+        <td><span style="font-family:'Urbanist',sans-serif;font-weight:700">${fmtM(d.value)}</span></td>
+        <td><span style="color:${pc};font-weight:600">${d.prob}%</span></td>
+        <td><span class="badge" style="background:rgba(255,255,255,.05);color:var(--text2)">${d.stage}</span></td>
+        <td>${fmtD(d.close)}</td>
+      </tr>`;
+    }).join('')}
+  </tbody></table></div>`;
+}
+
+function saveDeal(){
+  const name=document.getElementById('df-nm').value.trim();
+  if(!name){toast('נא למלא שם','err');return}
+  DB.deals.unshift({id:Date.now(),name,company:document.getElementById('df-co').value.trim()||'—',value:Number(document.getElementById('df-vl').value)||0,prob:Number(document.getElementById('df-pb').value)||50,stage:document.getElementById('df-sg').value,close:document.getElementById('df-cl').value||fd(30),created:today(),notes:[]});
+  persist();closeModal('modal-d');renderDeals();updatePipelineTotal();updateDash();
+  pushAct(`עסקה חדשה: <strong>${name}</strong>`,'#F59E0B');
+  toast(`עסקה "${name}" נוספה`);
+}
+
+/* ─── DRAG & DROP ─── */
+let _dragId=null;
+function dragStart(e,id){_dragId=id;setTimeout(()=>e.target.classList.add('dragging'),0)}
+function dragEnd(e){e.target.classList.remove('dragging');_dragId=null}
+function dragOverCol(e){e.preventDefault();e.currentTarget.classList.add('drag-over')}
+function dragLeaveCol(e){if(!e.currentTarget.contains(e.relatedTarget))e.currentTarget.classList.remove('drag-over')}
+function dropDeal(e,stage){
+  e.preventDefault();e.currentTarget.classList.remove('drag-over');
+  if(!_dragId)return;
+  const d=DB.deals.find(x=>x.id===_dragId);
+  if(d&&d.stage!==stage){d.stage=stage;persist();renderDeals();updatePipelineTotal();updateDash();renderPipeRows();pushAct(`עסקה <strong>${d.name}</strong> עברה ל${stage}`,'#5B7CF6');toast(`${d.name} → ${stage}`)}
+  _dragId=null;
+}
+
+/* ─── EXPORT ─── */
+function exportCSV(rows,cols,filename){
+  const csv=[cols.map(c=>c.label).join(','),...rows.map(r=>cols.map(c=>`"${(r[c.key]||'').toString().replace(/"/g,'""')}"`).join(','))].join('\n');
+  const a=document.createElement('a');a.href=URL.createObjectURL(new Blob(['﻿'+csv],{type:'text/csv;charset=utf-8'}));a.download=filename;a.click();URL.revokeObjectURL(a.href);
+}
+function exportContacts(){
+  exportCSV(DB.contacts.filter(c=>c.status!=='lead'),[{key:'fname',label:'שם פרטי'},{key:'lname',label:'שם משפחה'},{key:'company',label:'חברה'},{key:'phone',label:'טלפון'},{key:'email',label:'אימייל'},{key:'status',label:'סטטוס'},{key:'date',label:'תאריך'}],'contacts.csv');
+  toast('אנשי קשר יוצאו לקובץ CSV');
+}
+function exportLeads(){
+  exportCSV(DB.contacts.filter(c=>c.status==='lead'),[{key:'fname',label:'שם פרטי'},{key:'lname',label:'שם משפחה'},{key:'company',label:'חברה'},{key:'phone',label:'טלפון'},{key:'source',label:'מקור'},{key:'leadType',label:'סוג'},{key:'leadStage',label:'שלב'},{key:'date',label:'תאריך'}],'leads.csv');
+  toast('לידים יוצאו לקובץ CSV');
+}
+
+/* ─── DEAL DRAWER ─── */
+let _dealDrawerId=null;
+function openDealDrawer(id){
+  const d=DB.deals.find(x=>x.id===id);if(!d)return;
+  _dealDrawerId=id;
+  document.getElementById('dd-name').textContent=d.name;
+  document.getElementById('dd-co').textContent=d.company;
+  _updateDDbadges(d);
+  dealDrawerTab('info',document.querySelector('#deal-drawer .dtab'));
+  document.getElementById('deal-drawer-overlay').classList.add('open');
+}
+function closeDealDrawer(){document.getElementById('deal-drawer-overlay').classList.remove('open');_dealDrawerId=null}
+function _updateDDbadges(d){document.getElementById('dd-badges').innerHTML=`<span class="badge" style="background:rgba(255,255,255,.06);color:var(--text2)">${d.stage}</span><span class="badge b-${d.prob>=70?'green':d.prob>=40?'amber':'red'}">${d.prob}%</span>`}
+function dealDrawerTab(tab,el){
+  document.querySelectorAll('#deal-drawer .dtab').forEach(t=>t.classList.remove('active'));el.classList.add('active');
+  const d=DB.deals.find(x=>x.id===_dealDrawerId);if(!d)return;
+  const body=document.getElementById('deal-drawer-body');
+  if(tab==='info'){
+    body.innerHTML=`
+      <div class="d-field"><div class="d-field-lbl">שווי</div><div class="d-field-val" style="font-family:'Urbanist',sans-serif;font-size:24px;font-weight:800;color:var(--green);margin-top:4px">${fmtM(d.value)}</div></div>
+      <div class="d-field" style="margin-top:14px"><div class="d-field-lbl">שלב</div>
+        <select class="f-sel" style="margin-top:5px" onchange="updateDealStage(${d.id},this.value)">${STAGES.map(s=>`<option value="${s.name}"${d.stage===s.name?' selected':''}>${s.name}</option>`).join('')}</select></div>
+      <div class="d-field"><div class="d-field-lbl">הסתברות סגירה</div>
+        <div style="display:flex;align-items:center;gap:10px;margin-top:6px">
+          <input type="range" min="0" max="100" value="${d.prob}" style="flex:1;accent-color:var(--accent)" oninput="this.nextElementSibling.textContent=this.value+'%'" onchange="updateDealProb(${d.id},this.value)">
+          <span style="font-family:'Urbanist',sans-serif;font-weight:700;font-size:14px;min-width:36px">${d.prob}%</span>
+        </div></div>
+      <div class="d-field"><div class="d-field-lbl">לקוח</div><div class="d-field-val">${d.company}</div></div>
+      <div class="d-field"><div class="d-field-lbl">סגירה צפויה</div><div class="d-field-val">${fmtD(d.close)}</div></div>
+      <div class="d-field"><div class="d-field-lbl">נוצר</div><div class="d-field-val">${fmtD(d.created)}</div></div>
+      <div class="d-field"><div class="d-field-lbl">ימים בפייפליין</div><div class="d-field-val">${daysAgo(d.created)} ימים</div></div>
+      <div style="margin-top:18px;padding-top:14px;border-top:1px solid var(--border)">
+        <button class="btn btn-red btn-sm" onclick="if(confirm('למחוק עסקה?')){deleteDeal(${d.id});closeDealDrawer()}">מחק עסקה</button></div>`;
+  } else {
+    const notes=d.notes||[];
+    body.innerHTML=`<textarea class="note-input" id="deal-note-inp" rows="3" placeholder="הוסף הערה..."></textarea>
+      <button class="btn btn-primary btn-sm" style="margin:8px 0 14px" onclick="saveDealNote()">שמור הערה</button>
+      ${notes.length?notes.map(n=>`<div class="note-item"><div class="note-text">${n.text}</div><div class="note-date">${fmtD(n.date)}</div></div>`).join(''):'<div style="color:var(--text3);font-size:13px">אין הערות עדיין</div>'}`;
+  }
+}
+function updateDealStage(id,stage){
+  const d=DB.deals.find(x=>x.id===id);if(!d)return;
+  d.stage=stage;persist();renderDeals();updatePipelineTotal();updateDash();renderPipeRows();_updateDDbadges(d);toast(`שלב עודכן ל${stage}`);
+}
+function updateDealProb(id,prob){
+  const d=DB.deals.find(x=>x.id===id);if(!d)return;
+  d.prob=Number(prob);persist();updateDash();_updateDDbadges(d);
+}
+function deleteDeal(id){DB.deals=DB.deals.filter(x=>x.id!==id);persist();renderDeals();updatePipelineTotal();updateDash();toast('עסקה נמחקה','err')}
+function saveDealNote(){
+  const d=DB.deals.find(x=>x.id===_dealDrawerId);if(!d)return;
+  const text=document.getElementById('deal-note-inp')?.value.trim();
+  if(!text){toast('הערה ריקה','err');return}
+  if(!d.notes)d.notes=[];
+  d.notes.unshift({text,date:today()});persist();
+  dealDrawerTab('notes',document.querySelectorAll('#deal-drawer .dtab')[1]);
+  toast('הערה נשמרה');
+}
+
+/* ─── TASKS ─── */
+function renderTasks(){
+  const td=today();
+  const todayT=DB.tasks.filter(t=>!t.done&&t.due<=td);
+  const upcomingT=DB.tasks.filter(t=>!t.done&&t.due>td);
+  const doneT=DB.tasks.filter(t=>t.done);
+  function tHTML(t){return`<div class="task-row${t.done?' done':''}" tabindex="0">
+    <div class="p-dot" style="background:${PRI_CLR[t.priority]}"></div>
+    <div class="t-check${t.done?' checked':''}" onclick="toggleTask(${t.id})" role="checkbox" aria-checked="${t.done}" tabindex="0" onkeydown="if(event.key===' ')toggleTask(${t.id})">
+      ${t.done?'<svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>':''}
+    </div>
+    <div class="t-body">
+      <div class="t-title">${t.title}</div>
+      <div class="t-meta"><span>${t.related}</span><span>${fmtD(t.due)}</span></div>
+    </div>
+    <button class="btn btn-ghost btn-sm btn-icon" onclick="deleteTask(${t.id})" aria-label="מחק">
+      <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+    </button>
+  </div>`}
+  const empty='<div style="color:var(--text3);font-size:13px;padding:4px 0">אין משימות</div>';
+  document.getElementById('t-today').innerHTML=todayT.map(tHTML).join('')||empty;
+  document.getElementById('t-upcoming').innerHTML=upcomingT.map(tHTML).join('')||empty;
+  document.getElementById('t-done').innerHTML=doneT.map(tHTML).join('')||empty;
+  const open=DB.tasks.filter(t=>!t.done).length;
+  document.getElementById('t-summary').innerHTML=`
+    <div class="mini-stat-row"><span>פתוחות</span><span class="mini-val">${open}</span></div>
+    <div class="mini-stat-row"><span>הושלמו</span><span class="mini-val" style="color:var(--green)">${doneT.length}</span></div>
+    <div class="mini-stat-row"><span>עדיפות גבוהה</span><span class="mini-val" style="color:var(--red)">${DB.tasks.filter(t=>t.priority==='high'&&!t.done).length}</span></div>
+    <div class="mini-stat-row"><span>היום</span><span class="mini-val">${todayT.length}</span></div>`;
+  renderTasksPie();
+}
+
+function toggleTask(id){const t=DB.tasks.find(x=>x.id===id);if(!t)return;t.done=!t.done;persist();renderTasks();updateBadges();if(t.done){pushAct(`משימה הושלמה: <strong>${t.title}</strong>`,'#22C55E');toast('משימה הושלמה')}}
+function deleteTask(id){DB.tasks=DB.tasks.filter(t=>t.id!==id);persist();renderTasks();updateBadges();toast('משימה נמחקה','err')}
+function saveTask(){
+  const title=document.getElementById('tf-ti').value.trim();
+  if(!title){toast('נא למלא כותרת','err');return}
+  DB.tasks.unshift({id:Date.now(),title,priority:document.getElementById('tf-pr').value,due:document.getElementById('tf-du').value||today(),related:document.getElementById('tf-rl').value.trim()||'כללי',done:false});
+  persist();closeModal('modal-t');renderTasks();updateBadges();updateDash();
+  pushAct(`משימה חדשה: <strong>${title}</strong>`,'#A78BFA');
+  toast(`"${title}" נוספה`);
+  document.getElementById('tf-ti').value='';document.getElementById('tf-rl').value='';
+}
+
+/* ─── DASHBOARD ─── */
+const DEFAULT_ACT=[
+  {text:'עסקה <strong>מערכת ERP</strong> עברה לשלב הצעה',color:'#F59E0B',time:'לפני 10 דק׳'},
+  {text:'איש קשר <strong>משה לוי</strong> סומן כפעיל',color:'#22C55E',time:'לפני 30 דק׳'},
+  {text:'משימה <strong>פולואו-אפ</strong> הוגדרה',color:'#A78BFA',time:'לפני שעה'},
+  {text:'ליד חדש <strong>רחל שמש</strong> נוסף',color:'#5B7CF6',time:'לפני 2 שע׳'},
+  {text:'עסקה <strong>ייעוץ Q3</strong> — סיכוי עלה ל-90%',color:'#22C55E',time:'אתמול'},
+];
+
+function pushAct(text,color){actLog.unshift({text,color,time:'עכשיו'});if(actLog.length>7)actLog.pop();renderActFeed()}
+
+function renderActFeed(){
+  const el=document.getElementById('act-feed');if(!el)return;
+  const list=actLog.length?actLog:DEFAULT_ACT;
+  el.innerHTML=list.map(a=>`<div class="act-row"><div class="act-dot" style="background:${a.color}"></div><div class="act-text">${a.text}</div><div class="act-time">${a.time}</div></div>`).join('');
+}
+
+function updateDash(){
+  const rev=DB.deals.reduce((s,d)=>s+d.value*(d.prob/100),0);
+  const target=1500000;
+  const pct=Math.min(100,Math.round(rev/target*100));
+  // dynamic KPIs
+  const now=new Date(),nowY=now.getFullYear(),nowM=now.getMonth();
+  const lastM=nowM===0?11:nowM-1,lastY=nowM===0?nowY-1:nowY;
+  const thisMS=`${nowY}-${String(nowM+1).padStart(2,'0')}`,lastMS=`${lastY}-${String(lastM+1).padStart(2,'0')}`;
+  const cThis=DB.contacts.filter(c=>c.date?.startsWith(thisMS)).length;
+  const cLast=DB.contacts.filter(c=>c.date?.startsWith(lastMS)).length;
+  const cDelta=cLast>0?Math.round((cThis-cLast)/cLast*100):cThis>0?100:0;
+  const weekAgo=new Date(Date.now()-7*86400000);
+  const newDeals=DB.deals.filter(d=>new Date(d.created)>=weekAgo).length;
+  const avgDays=DB.deals.length?Math.round(DB.deals.reduce((s,d)=>s+daysAgo(d.created),0)/DB.deals.length):0;
+  document.getElementById('s-c').textContent=DB.contacts.length;
+  const cDEl=document.getElementById('s-c-delta');
+  if(cDEl){const up=cDelta>=0;cDEl.className='stat-delta '+(up?'up':'down');cDEl.textContent=(up?'↑ ':'↓ ')+Math.abs(cDelta)+'% מהחודש שעבר'}
+  document.getElementById('s-d').textContent=DB.deals.length;
+  const dDEl=document.getElementById('s-d-delta');if(dDEl)dDEl.textContent='↑ '+newDeals+' חדשות השבוע';
+  const sDays=document.getElementById('s-days');if(sDays)sDays.textContent=avgDays;
+  document.getElementById('s-r').textContent=fmtM(Math.round(rev));
+  const fv=document.getElementById('forecast-val');
+  const ff=document.getElementById('forecast-fill');
+  const fp=document.getElementById('forecast-pct');
+  const fb=document.getElementById('forecast-badge');
+  if(fv){fv.textContent=fmtM(Math.round(rev));ff.style.width=pct+'%';fp.textContent=pct;
+    if(fb){fb.className='badge '+(pct>=80?'b-green':pct>=50?'b-amber':'b-red');fb.textContent=pct>=80?'על המסלול':pct>=50?'סביר':'מאחור'}}
+}
+
+function updateBadges(){
+  document.getElementById('badge-c').textContent=DB.contacts.length;
+  document.getElementById('badge-t').textContent=DB.tasks.filter(t=>!t.done).length;
+  document.getElementById('badge-l').textContent=DB.contacts.filter(c=>c.status==='lead').length;
+}
+
+function renderPipeRows(){
+  const el=document.getElementById('pipe-rows');if(!el)return;
+  const data=STAGES.map(s=>({...s,count:DB.deals.filter(d=>d.stage===s.name).length,val:DB.deals.filter(d=>d.stage===s.name).reduce((a,d)=>a+d.value,0)}));
+  const max=Math.max(...data.map(x=>x.count),1);
+  el.innerHTML=data.map(s=>`<div class="pipe-row">
+    <div class="pipe-name">${s.name}</div>
+    <div class="pipe-track"><div class="pipe-fill" style="width:${Math.round(s.count/max*100)}%;background:${s.color}"></div></div>
+    <div class="pipe-cnt">${s.count}</div>
+    <div class="pipe-val" style="font-size:11px;color:var(--text3)">${fmtM(s.val)}</div>
+  </div>`).join('');
+}
+
+/* ─── CHARTS ─── */
+function mkChart(id,cfg){dc(id);const c=document.getElementById(id);if(c)charts[id]=new Chart(c,cfg)}
+
+function renderRevChart(){
+  const c=document.getElementById('c-rev');if(!c)return;
+  const g=c.getContext('2d').createLinearGradient(0,0,0,210);
+  g.addColorStop(0,'rgba(91,124,246,.28)');g.addColorStop(1,'rgba(91,124,246,0)');
+  mkChart('c-rev',{type:'line',data:{labels:['דצמ׳','ינו׳','פבר׳','מרץ','אפר׳','מאי'],datasets:[{data:[380000,420000,355000,510000,480000,620000],borderColor:'#5B7CF6',backgroundColor:g,borderWidth:2.5,pointRadius:4,pointBackgroundColor:'#5B7CF6',pointBorderColor:'#070B17',pointBorderWidth:2,tension:.4,fill:true}]},options:{maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{grid:CGRID,ticks:CTICK},y:{grid:CGRID,ticks:{...CTICK,callback:v=>'₪'+v.toLocaleString()}}}}});
+}
+
+function renderDonut(){
+  const counts=STAGES.map(s=>DB.deals.filter(d=>d.stage===s.name).length);
+  mkChart('c-donut',{type:'doughnut',data:{labels:STAGES.map(s=>s.name),datasets:[{data:counts,backgroundColor:['#64748B','#F59E0B','#A78BFA','#5B7CF6'],borderWidth:0,hoverOffset:5}]},options:{maintainAspectRatio:false,cutout:'70%',plugins:{legend:{position:'bottom',labels:{color:'#64748B',font:{family:'DM Sans',size:11},padding:9,boxWidth:8}}}}});
+  const mn=DB.deals.filter(d=>d.stage==='משא ומתן').length;
+  const winRate=DB.deals.length?Math.round((mn/DB.deals.length)*100):0;
+  document.getElementById('donut-stats').innerHTML=`
+    <div class="mini-stat-row"><span>סה"כ עסקאות</span><span class="mini-val">${DB.deals.length}</span></div>
+    <div class="mini-stat-row"><span>שיעור המרה</span><span class="mini-val" style="color:var(--accent)">${winRate}%</span></div>`;
+}
+
+function renderTasksPie(){
+  dc('c-tasks-pie');const c=document.getElementById('c-tasks-pie');if(!c)return;
+  const open=DB.tasks.filter(t=>!t.done);
+  mkChart('c-tasks-pie',{type:'doughnut',data:{labels:['גבוהה','בינונית','נמוכה'],datasets:[{data:[open.filter(t=>t.priority==='high').length,open.filter(t=>t.priority==='medium').length,open.filter(t=>t.priority==='low').length],backgroundColor:['#EF4444','#F59E0B','#22C55E'],borderWidth:0,hoverOffset:4}]},options:{maintainAspectRatio:false,cutout:'62%',plugins:{legend:{position:'bottom',labels:{color:'#64748B',font:{family:'DM Sans',size:11},padding:8,boxWidth:8}}}}});
+}
+
+function renderReports(){
+  const months=['ינו׳','פבר׳','מרץ','אפר׳','מאי'];
+  mkChart('r1',{type:'bar',data:{labels:months,datasets:[{label:'יעד',data:[500000,520000,540000,560000,580000],backgroundColor:'rgba(91,124,246,.18)',borderColor:'#5B7CF6',borderWidth:2,borderRadius:4},{label:'בפועל',data:[420000,510000,480000,620000,540000],backgroundColor:'rgba(34,197,94,.18)',borderColor:'#22C55E',borderWidth:2,borderRadius:4}]},options:{maintainAspectRatio:false,plugins:{legend:{labels:{color:'#64748B',font:{family:'DM Sans',size:11}}}},scales:{x:{grid:CGRID,ticks:CTICK},y:{grid:CGRID,ticks:{...CTICK,callback:v=>'₪'+v.toLocaleString()}}}}});
+  mkChart('r2',{type:'pie',data:{labels:['הפניות','רשתות חברתיות','גוגל','אירועים','אחר'],datasets:[{data:[35,25,20,12,8],backgroundColor:['#5B7CF6','#A78BFA','#F59E0B','#22C55E','#EF4444'],borderWidth:0,hoverOffset:5}]},options:{maintainAspectRatio:false,plugins:{legend:{position:'right',labels:{color:'#64748B',font:{family:'DM Sans',size:11},padding:10,boxWidth:8}}}}});
+  mkChart('r3',{type:'bar',data:{labels:STAGES.map(s=>s.name),datasets:[{label:'%',data:[100,68,42,25],backgroundColor:['#64748B','#F59E0B','#A78BFA','#5B7CF6'],borderRadius:5}]},options:{maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{grid:CGRID,ticks:CTICK},y:{grid:CGRID,ticks:{...CTICK,callback:v=>v+'%'},max:110}}}});
+  mkChart('r4',{type:'line',data:{labels:months,datasets:[{data:[95000,110000,88000,145000,128000],borderColor:'#A78BFA',backgroundColor:'rgba(167,139,250,.1)',borderWidth:2.5,pointRadius:4,pointBackgroundColor:'#A78BFA',pointBorderColor:'#070B17',pointBorderWidth:2,tension:.4,fill:true}]},options:{maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{grid:CGRID,ticks:CTICK},y:{grid:CGRID,ticks:{...CTICK,callback:v=>'₪'+v.toLocaleString()}}}}});
+}
+
+/* ─── COMMAND PALETTE ─── */
+function openCmd(){document.getElementById('cmd-overlay').classList.add('open');document.getElementById('cmd-input').value='';renderCmd('');setTimeout(()=>document.getElementById('cmd-input').focus(),50)}
+function closeCmd(){document.getElementById('cmd-overlay').classList.remove('open')}
+
+function renderCmd(q){
+  const ql=q.toLowerCase();
+  const items=[];
+  // actions
+  const actions=[{title:'איש קשר חדש',sub:'הוסף רשומה',icon:'👤',action:()=>{closeCmd();document.getElementById('modal-c').classList.add('open')}},{title:'ליד חדש',sub:'הוסף ליד לפייפליין',icon:'🎯',action:()=>{closeCmd();document.getElementById('modal-l').classList.add('open')}},{title:'עסקה חדשה',sub:'הוסף עסקה לפייפליין',icon:'💼',action:()=>{closeCmd();document.getElementById('modal-d').classList.add('open')}},{title:'משימה חדשה',sub:'הוסף משימה',icon:'✅',action:()=>{closeCmd();document.getElementById('modal-t').classList.add('open')}}];
+  // nav
+  const navs=[{title:'לוח בקרה',sub:'ניווט',icon:'📊',action:()=>{closeCmd();nav('dashboard',document.querySelector('.nav-item'))}},{title:'אנשי קשר',sub:'ניווט',icon:'👥',action:()=>{closeCmd();nav('contacts',document.querySelectorAll('.nav-item')[1])}},{title:'לידים',sub:'ניווט',icon:'🎯',action:()=>{closeCmd();nav('leads',document.querySelectorAll('.nav-item')[2])}},{title:'עסקאות',sub:'ניווט',icon:'📈',action:()=>{closeCmd();nav('deals',document.querySelectorAll('.nav-item')[3])}},{title:'משימות',sub:'ניווט',icon:'📋',action:()=>{closeCmd();nav('tasks',document.querySelectorAll('.nav-item')[4])}}];
+  // contacts
+  const contacts=DB.contacts.filter(c=>c.status!=='lead'&&(c.fname+' '+c.lname+c.company).toLowerCase().includes(ql)).slice(0,4).map(c=>({title:`${c.fname} ${c.lname}`,sub:c.company,icon:'👤',action:()=>{closeCmd();if(curPage!=='contacts')nav('contacts',document.querySelectorAll('.nav-item')[1]);openDrawer(c.id)}}));
+  // leads
+  const leadsCmd=DB.contacts.filter(c=>c.status==='lead'&&(c.fname+' '+c.lname+c.company).toLowerCase().includes(ql)).slice(0,3).map(c=>({title:`${c.fname} ${c.lname}`,sub:c.company+' · '+(c.leadStage||'חדש'),icon:'🎯',action:()=>{closeCmd();nav('leads',document.querySelectorAll('.nav-item')[2])}}));
+  // deals
+  const deals=DB.deals.filter(d=>d.name.toLowerCase().includes(ql)).slice(0,3).map(d=>({title:d.name,sub:fmtM(d.value),icon:'💼',action:()=>{closeCmd();nav('deals',document.querySelectorAll('.nav-item')[3])}}));
+
+  const filtered=(g,list)=>list.filter(x=>!q||x.title.toLowerCase().includes(ql)||x.sub?.toLowerCase().includes(ql));
+  const fActions=filtered('a',actions);
+  const fNavs=filtered('n',navs);
+
+  cmdItems=[];
+  const el=document.getElementById('cmd-results');
+  let html='';
+  if(!q||fActions.length){html+=`<div class="cmd-group-lbl">פעולות</div>`;fActions.forEach(x=>{cmdItems.push(x);html+=cmdItemHTML(x,cmdItems.length-1)})}
+  if(!q||fNavs.length){html+=`<div class="cmd-group-lbl">ניווט</div>`;fNavs.forEach(x=>{cmdItems.push(x);html+=cmdItemHTML(x,cmdItems.length-1)})}
+  if(contacts.length){html+=`<div class="cmd-group-lbl">אנשי קשר</div>`;contacts.forEach(x=>{cmdItems.push(x);html+=cmdItemHTML(x,cmdItems.length-1)})}
+  if(leadsCmd.length){html+=`<div class="cmd-group-lbl">לידים</div>`;leadsCmd.forEach(x=>{cmdItems.push(x);html+=cmdItemHTML(x,cmdItems.length-1)})}
+  if(deals.length){html+=`<div class="cmd-group-lbl">עסקאות</div>`;deals.forEach(x=>{cmdItems.push(x);html+=cmdItemHTML(x,cmdItems.length-1)})}
+  el.innerHTML=html||'<div style="padding:20px;text-align:center;color:var(--text3);font-size:13px">אין תוצאות</div>';
+  cmdSel=0;updateCmdSel();
+}
+
+function cmdItemHTML(x,i){return`<div class="cmd-item" data-idx="${i}" onclick="execCmd(${i})"><div class="cmd-item-icon" style="background:var(--card)">${x.icon}</div><div><div class="cmd-item-title">${x.title}</div><div class="cmd-item-sub">${x.sub||''}</div></div></div>`}
+
+function updateCmdSel(){document.querySelectorAll('.cmd-item').forEach((el,i)=>{el.classList.toggle('selected',i===cmdSel)})}
+
+function execCmd(i){if(cmdItems[i])cmdItems[i].action()}
+
+function cmdKey(e){
+  if(e.key==='ArrowDown'){e.preventDefault();cmdSel=Math.min(cmdSel+1,cmdItems.length-1);updateCmdSel()}
+  else if(e.key==='ArrowUp'){e.preventDefault();cmdSel=Math.max(cmdSel-1,0);updateCmdSel()}
+  else if(e.key==='Enter'){e.preventDefault();execCmd(cmdSel)}
+}
+
+/* ─── BOOT ─── */
+/* ─── THEME ─── */
+function toggleTheme(){
+  const isLight=document.documentElement.dataset.theme==='light';
+  const next=isLight?'dark':'light';
+  applyTheme(next);
+  localStorage.setItem('crm_theme',next);
+}
+function applyTheme(t){
+  if(t==='light'){
+    document.documentElement.dataset.theme='light';
+    document.getElementById('theme-icon-dark').style.display='none';
+    document.getElementById('theme-icon-light').style.display='';
+  } else {
+    delete document.documentElement.dataset.theme;
+    document.getElementById('theme-icon-dark').style.display='';
+    document.getElementById('theme-icon-light').style.display='none';
+  }
+  // re-render charts with correct tick colors
+  const tick=t==='light'?'#94A3B8':'#64748B';
+  Object.assign(CTICK,{color:tick});
+  Object.assign(CGRID,{color:t==='light'?'rgba(0,0,0,.06)':'rgba(148,163,184,0.07)'});
+  if(charts['c-rev'])renderRevChart();
+  if(charts['c-donut'])renderDonut();
+  if(charts['c-tasks-pie'])renderTasksPie();
+  if(charts['r1'])renderReports();
+}
+
+load();seed();
+// seed leads for existing sessions that have no leads
+if(!DB.contacts.some(c=>c.status==='lead')){
+  const _t=Date.now();
+  DB.contacts.push(
+    {id:_t+1,fname:'שרה',lname:'כהן',company:'בטא סולושנס',phone:'052-2345678',email:'sarah@beta.co.il',status:'lead',leadStage:'ניסיון קשר',source:'Facebook',leadType:'עסקי',date:'2026-02-01',notes:[]},
+    {id:_t+2,fname:'רחל',lname:'שמש',company:'זטא זון',phone:'050-6789012',email:'rachel@zeta.co.il',status:'lead',leadStage:'פולואפ',source:'Instagram',leadType:'פרטי',date:'2026-04-05',notes:[]},
+    {id:_t+3,fname:'נועה',lname:'בן-דוד',company:'קסטה בע"מ',phone:'050-9876543',email:'noa@kesta.co.il',status:'lead',leadStage:'לא ענה',source:'Instagram',leadType:'פרטי',date:'2026-05-05',notes:[]},
+    {id:_t+4,fname:'אמיר',lname:'רוזן',company:'רוזן טק',phone:'054-8765432',email:'amir@rtech.co.il',status:'lead',leadStage:'מוכשר',source:'LinkedIn',leadType:'עסקי',date:'2026-05-10',notes:[]},
+    {id:_t+5,fname:'תמר',lname:'קלמן',company:'פינה טק',phone:'052-7654321',email:'tamar@pina.co.il',status:'lead',leadStage:'חדש',source:'Google',leadType:'עסקי',date:'2026-05-14',notes:[]},
+    {id:_t+6,fname:'יוני',lname:'פרידמן',company:'פרידמן ושות׳',phone:'054-1122334',email:'yoni@fried.co.il',status:'lead',leadStage:'חדש',source:'WhatsApp',leadType:'פרטי',date:'2026-05-16',notes:[]}
+  );
+  persist();
+}
+DB.contacts.filter(c=>c.status==='lead'&&!c.leadStage).forEach(c=>c.leadStage='חדש');persist();
+const _savedTheme=localStorage.getItem('crm_theme')||'dark';
+applyTheme(_savedTheme);
+updateDash();updateBadges();renderActFeed();renderPipeRows();renderRevChart();renderDonut();
+</script>
+</body>
+</html>
