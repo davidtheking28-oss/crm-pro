@@ -336,12 +336,23 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
 /* RESPONSIVE */
 @media(max-width:1100px){.stats-grid{grid-template-columns:repeat(2,1fr)}.g2-3{grid-template-columns:1fr}}
 @media(max-width:800px){.tasks-wrap{grid-template-columns:1fr}.reports-grid{grid-template-columns:1fr}.g1-1{grid-template-columns:1fr}}
+.sidebar-overlay{position:fixed;inset:0;background:rgba(7,11,23,.6);z-index:39;opacity:0;pointer-events:none;transition:opacity .2s}
+.sidebar-overlay.open{opacity:1;pointer-events:all}
+@media(max-width:860px){
+  #hamburger-btn{display:inline-flex!important}
+  .sidebar{position:fixed;top:0;bottom:0;right:0;transform:translateX(100%);transition:transform .22s cubic-bezier(.4,0,.2,1);z-index:40}
+  .sidebar.mobile-open{transform:translateX(0)}
+  .search-wrap input{width:110px}
+  .leads-layout{flex-direction:column}
+  .leads-sidebar{width:100%;position:static}
+}
 </style>
 </head>
 <body>
 
+<div class="sidebar-overlay" id="sidebar-overlay" onclick="toggleSidebar(false)"></div>
 <!-- SIDEBAR -->
-<aside class="sidebar">
+<aside class="sidebar" id="sidebar">
   <div class="sb-logo">
     <div class="sb-logo-inner">
       <div class="logo-icon">
@@ -385,11 +396,11 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
     </div>
   </nav>
   <div class="sb-footer">
-    <div class="user-tile" tabindex="0">
-      <div class="u-av">DK</div>
+    <div class="user-tile" tabindex="0" onclick="openSettings()" onkeydown="if(event.key==='Enter')openSettings()">
+      <div class="u-av" id="sb-av">DK</div>
       <div style="flex:1">
-        <div class="u-name">David King</div>
-        <div class="u-role">מנהל מכירות</div>
+        <div class="u-name" id="sb-name">David King</div>
+        <div class="u-role" id="sb-role">מנהל מכירות</div>
       </div>
       <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#475569" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14M4.93 4.93a10 10 0 0 0 0 14.14"/></svg>
     </div>
@@ -399,11 +410,15 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
 <!-- MAIN -->
 <div class="main">
   <header class="topbar">
+    <button class="btn btn-ghost btn-icon" id="hamburger-btn" onclick="toggleSidebar()" aria-label="תפריט" style="display:none">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+    </button>
     <div class="page-title" id="page-title">לוח בקרה</div>
     <div class="topbar-actions">
-      <div class="search-wrap" onclick="document.getElementById('gsearch').focus()">
+      <div class="search-wrap" style="position:relative" onclick="document.getElementById('gsearch').focus()">
         <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#475569" stroke-width="2.2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-        <input type="search" id="gsearch" placeholder="חיפוש..." oninput="onSearch(this.value)" autocomplete="off">
+        <input type="search" id="gsearch" placeholder="חיפוש בכל המערכת..." oninput="onSearch(this.value)" onfocus="onSearch(this.value)" autocomplete="off">
+        <div id="gsearch-results" class="cmd-results" style="display:none;position:absolute;top:42px;right:0;width:300px;background:#0D1528;border:1px solid var(--border-s);border-radius:12px;box-shadow:0 20px 50px rgba(0,0,0,.5);z-index:60;max-height:340px;overflow-y:auto"></div>
       </div>
       <button class="btn btn-ghost btn-icon" id="theme-btn" onclick="toggleTheme()" title="החלף מצב תאורה" aria-label="החלף מצב תאורה">
         <svg id="theme-icon-dark" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
@@ -451,8 +466,8 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
       <!-- FORECAST STRIP -->
       <div class="card" style="margin-bottom:18px;padding:14px 18px">
         <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
-          <div style="font-family:'Urbanist',sans-serif;font-weight:700;font-size:13px">תחזית רבעון נוכחי</div>
-          <div style="font-size:12px;color:var(--text3)">יעד: <span style="color:var(--text);font-weight:600">₪1,500,000</span></div>
+          <div style="font-family:'Urbanist',sans-serif;font-weight:700;font-size:13px">הכנסה בפועל — רבעון נוכחי</div>
+          <div style="font-size:12px;color:var(--text3)">יעד: <span id="forecast-target" style="color:var(--text);font-weight:600">₪1,500,000</span></div>
         </div>
         <div style="display:flex;align-items:center;gap:12px">
           <div style="font-family:'Urbanist',sans-serif;font-weight:800;font-size:20px;color:var(--green)" id="forecast-val">₪0</div>
@@ -549,20 +564,25 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
 
     <!-- DEALS -->
     <section class="page" id="page-deals">
-      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
-        <div style="display:flex;gap:8px;align-items:center">
-          <div style="font-size:13px;color:var(--text3)">סה"כ פייפליין: <span style="font-family:'Urbanist',sans-serif;font-weight:700;color:var(--text)" id="pipeline-total">₪0</span></div>
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;flex-wrap:wrap;gap:8px">
+        <div style="display:flex;gap:14px;align-items:center;flex-wrap:wrap">
+          <div style="font-size:13px;color:var(--text3)">סה"כ פייפליין פתוח: <span style="font-family:'Urbanist',sans-serif;font-weight:700;color:var(--text)" id="pipeline-total">₪0</span></div>
+          <div style="font-size:13px;color:var(--text3)">נסגרו בהצלחה: <span style="font-family:'Urbanist',sans-serif;font-weight:700;color:var(--green)" id="pipeline-won">₪0</span></div>
         </div>
-        <div class="view-toggle">
-          <button class="vt-btn active" id="vt-kanban" onclick="setDealView('kanban')" title="תצוגת קנבאן">
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="5" height="18" rx="1"/><rect x="10" y="3" width="5" height="18" rx="1"/><rect x="17" y="3" width="4" height="18" rx="1"/></svg>
-          </button>
-          <button class="vt-btn" id="vt-list" onclick="setDealView('list')" title="תצוגת רשימה">
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
-          </button>
+        <div style="display:flex;gap:8px;align-items:center">
+          <button class="btn btn-ghost btn-sm" id="closed-toggle-btn" onclick="toggleClosedDeals()">עסקאות שנסגרו</button>
+          <div class="view-toggle">
+            <button class="vt-btn active" id="vt-kanban" onclick="setDealView('kanban')" title="תצוגת קנבאן">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="5" height="18" rx="1"/><rect x="10" y="3" width="5" height="18" rx="1"/><rect x="17" y="3" width="4" height="18" rx="1"/></svg>
+            </button>
+            <button class="vt-btn" id="vt-list" onclick="setDealView('list')" title="תצוגת רשימה">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
+            </button>
+          </div>
         </div>
       </div>
       <div id="deals-view"></div>
+      <div id="closed-deals-view" style="display:none;margin-top:16px"></div>
     </section>
 
     <!-- TASKS -->
@@ -663,7 +683,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
 <!-- MODALS -->
 <div class="modal-bg" id="modal-c">
   <div class="modal-box">
-    <div class="modal-hd"><div class="modal-title">איש קשר חדש</div><button class="modal-close" onclick="closeModal('modal-c')">✕</button></div>
+    <div class="modal-hd"><div class="modal-title" id="modal-c-title">איש קשר חדש</div><button class="modal-close" onclick="closeModal('modal-c')">✕</button></div>
     <div class="f-row">
       <div class="f-group"><label class="f-lbl" for="cf-fn">שם פרטי</label><input class="f-in" id="cf-fn" placeholder="ישראל"></div>
       <div class="f-group"><label class="f-lbl" for="cf-ln">שם משפחה</label><input class="f-in" id="cf-ln" placeholder="ישראלי"></div>
@@ -684,7 +704,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
 
 <div class="modal-bg" id="modal-d">
   <div class="modal-box">
-    <div class="modal-hd"><div class="modal-title">עסקה חדשה</div><button class="modal-close" onclick="closeModal('modal-d')">✕</button></div>
+    <div class="modal-hd"><div class="modal-title" id="modal-d-title">עסקה חדשה</div><button class="modal-close" onclick="closeModal('modal-d')">✕</button></div>
     <div class="f-group"><label class="f-lbl" for="df-nm">שם העסקה</label><input class="f-in" id="df-nm" placeholder="פרויקט / הזדמנות"></div>
     <div class="f-group"><label class="f-lbl" for="df-co">לקוח</label><input class="f-in" id="df-co" placeholder="שם הלקוח"></div>
     <div class="f-row">
@@ -701,7 +721,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
 
 <div class="modal-bg" id="modal-t">
   <div class="modal-box">
-    <div class="modal-hd"><div class="modal-title">משימה חדשה</div><button class="modal-close" onclick="closeModal('modal-t')">✕</button></div>
+    <div class="modal-hd"><div class="modal-title" id="modal-t-title">משימה חדשה</div><button class="modal-close" onclick="closeModal('modal-t')">✕</button></div>
     <div class="f-group"><label class="f-lbl" for="tf-ti">כותרת</label><input class="f-in" id="tf-ti" placeholder="תיאור המשימה"></div>
     <div class="f-row">
       <div class="f-group"><label class="f-lbl" for="tf-pr">עדיפות</label><select class="f-sel" id="tf-pr"><option value="high">גבוהה</option><option value="medium">בינונית</option><option value="low">נמוכה</option></select></div>
@@ -714,7 +734,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
 
 <div class="modal-bg" id="modal-l">
   <div class="modal-box">
-    <div class="modal-hd"><div class="modal-title">ליד חדש</div><button class="modal-close" onclick="closeModal('modal-l')">✕</button></div>
+    <div class="modal-hd"><div class="modal-title" id="modal-l-title">ליד חדש</div><button class="modal-close" onclick="closeModal('modal-l')">✕</button></div>
     <div class="f-row">
       <div class="f-group"><label class="f-lbl" for="lf-fn">שם פרטי</label><input class="f-in" id="lf-fn" placeholder="ישראל"></div>
       <div class="f-group"><label class="f-lbl" for="lf-ln">שם משפחה</label><input class="f-in" id="lf-ln" placeholder="ישראלי"></div>
@@ -727,8 +747,21 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
       <div class="f-group"><label class="f-lbl" for="lf-sr">מקור הגעה</label><select class="f-sel" id="lf-sr"><option value="הפניה">הפניה</option><option value="Facebook">Facebook</option><option value="Instagram">Instagram</option><option value="WhatsApp">WhatsApp</option><option value="Google">Google</option><option value="LinkedIn">LinkedIn</option><option value="אתר">אתר</option><option value="אירוע">אירוע</option><option value="קר">פנייה קרה</option></select></div>
       <div class="f-group"><label class="f-lbl" for="lf-tp">סוג לקוח</label><select class="f-sel" id="lf-tp"><option value="פרטי">לקוח פרטי</option><option value="עסקי">לקוח עסקי</option></select></div>
     </div>
-    <div class="f-group"><label class="f-lbl" for="lf-sg">שלב</label><select class="f-sel" id="lf-sg"><option value="חדש">חדש</option><option value="ניסיון קשר">ניסיון קשר</option><option value="לא ענה">לא ענה</option><option value="פולואפ">פולואפ</option><option value="מוכשר">מוכשר</option></select></div>
+    <div class="f-row">
+      <div class="f-group"><label class="f-lbl" for="lf-sg">שלב</label><select class="f-sel" id="lf-sg"><option value="חדש">חדש</option><option value="ניסיון קשר">ניסיון קשר</option><option value="לא ענה">לא ענה</option><option value="פולואפ">פולואפ</option><option value="מוכשר">מוכשר</option></select></div>
+      <div class="f-group"><label class="f-lbl" for="lf-fu">תאריך פולואפ</label><input class="f-in" id="lf-fu" type="date"></div>
+    </div>
     <div class="modal-foot"><button class="btn btn-primary" onclick="saveLead()">שמור</button><button class="btn btn-ghost" onclick="closeModal('modal-l')">ביטול</button></div>
+  </div>
+</div>
+
+<div class="modal-bg" id="modal-settings">
+  <div class="modal-box">
+    <div class="modal-hd"><div class="modal-title">הגדרות</div><button class="modal-close" onclick="closeModal('modal-settings')">✕</button></div>
+    <div class="f-group"><label class="f-lbl" for="set-name">שם משתמש</label><input class="f-in" id="set-name" placeholder="השם שלך"></div>
+    <div class="f-group"><label class="f-lbl" for="set-role">תפקיד</label><input class="f-in" id="set-role" placeholder="תפקיד"></div>
+    <div class="f-group"><label class="f-lbl" for="set-target">יעד רבעוני (₪)</label><input class="f-in" id="set-target" type="number" placeholder="1500000"></div>
+    <div class="modal-foot"><button class="btn btn-primary" onclick="saveSettingsForm()">שמור</button><button class="btn btn-ghost" onclick="closeModal('modal-settings')">ביטול</button></div>
   </div>
 </div>
 
@@ -749,13 +782,39 @@ const CGRID={color:'rgba(148,163,184,0.07)'};
 let charts={},actLog=[],cFilter='all',dealView='kanban',curPage='dashboard',sortKey='date-desc';
 let drawerCid=null,drawerCurTab='info';
 let leadsFilter='all';
+let editContactId=null,editLeadId=null,editTaskId=null,editDealId=null;
+let closedDealsOpen=false;
+let lastDeleted=null;
+const SETTINGS=Object.assign({userName:'David King',userRole:'מנהל מכירות',target:1500000},JSON.parse(localStorage.getItem('crm_settings')||'{}'));
+function saveSettings(){localStorage.setItem('crm_settings',JSON.stringify(SETTINGS))}
+function applySettingsToUI(){
+  document.getElementById('sb-name').textContent=SETTINGS.userName;
+  document.getElementById('sb-role').textContent=SETTINGS.userRole;
+  document.getElementById('sb-av').textContent=SETTINGS.userName.split(' ').map(w=>w[0]).join('').slice(0,2).toUpperCase();
+  const tgtEl=document.getElementById('forecast-target');if(tgtEl)tgtEl.textContent=fmtM(SETTINGS.target);
+}
+function openSettings(){
+  document.getElementById('set-name').value=SETTINGS.userName;
+  document.getElementById('set-role').value=SETTINGS.userRole;
+  document.getElementById('set-target').value=SETTINGS.target;
+  document.getElementById('modal-settings').classList.add('open');
+}
+function saveSettingsForm(){
+  SETTINGS.userName=document.getElementById('set-name').value.trim()||SETTINGS.userName;
+  SETTINGS.userRole=document.getElementById('set-role').value.trim()||SETTINGS.userRole;
+  SETTINGS.target=Number(document.getElementById('set-target').value)||SETTINGS.target;
+  saveSettings();applySettingsToUI();updateDash();
+  closeModal('modal-settings');
+  toast('הגדרות נשמרו');
+}
 const SRC_CLR={'Facebook':'#1877F2','Instagram':'#E1306C','WhatsApp':'#25D366','Google':'#4285F4','LinkedIn':'#0A66C2','הפניה':'#22C55E','אתר':'#06B6D4','אירוע':'#A78BFA','קר':'#94A3B8'};
 const STAGE_CLR={'חדש':'#94A3B8','ניסיון קשר':'#5B7CF6','לא ענה':'#EF4444','פולואפ':'#F59E0B','מוכשר':'#22C55E'};
 let cmdSel=0,cmdItems=[];
 
 /* ─── PERSIST ─── */
 function persist(){localStorage.setItem('crm_c',JSON.stringify(DB.contacts));localStorage.setItem('crm_d',JSON.stringify(DB.deals));localStorage.setItem('crm_t',JSON.stringify(DB.tasks))}
-function load(){DB.contacts=JSON.parse(localStorage.getItem('crm_c')||'[]');DB.deals=JSON.parse(localStorage.getItem('crm_d')||'[]');DB.tasks=JSON.parse(localStorage.getItem('crm_t')||'[]')}
+function load(){DB.contacts=JSON.parse(localStorage.getItem('crm_c')||'[]');DB.deals=JSON.parse(localStorage.getItem('crm_d')||'[]');DB.tasks=JSON.parse(localStorage.getItem('crm_t')||'[]');actLog=JSON.parse(localStorage.getItem('crm_act')||'[]')}
+function persistAct(){localStorage.setItem('crm_act',JSON.stringify(actLog))}
 
 /* ─── HELPERS ─── */
 function today(){return new Date().toISOString().split('T')[0]}
@@ -766,6 +825,12 @@ function avc(i){return AVC[i%AVC.length]}
 function ini(c){return(c.fname[0]||'')+(c.lname[0]||'')}
 function dc(k){if(charts[k]){charts[k].destroy();delete charts[k]}}
 function daysAgo(s){if(!s)return 0;return Math.round((Date.now()-new Date(s).getTime())/(86400000))}
+function esc(s){return String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
+function monthKey(s){return(s||'').slice(0,7)}
+function monthLbl(key){const m=['ינו׳','פבר׳','מרץ','אפר׳','מאי','יונ׳','יול׳','אוג׳','ספט׳','אוק׳','נוב׳','דצמ׳'];const[y,mo]=key.split('-');return m[Number(mo)-1]}
+function last6Months(){const arr=[];const d=new Date();d.setDate(1);for(let i=5;i>=0;i--){const x=new Date(d);x.setMonth(d.getMonth()-i);arr.push(`${x.getFullYear()}-${String(x.getMonth()+1).padStart(2,'0')}`)}return arr}
+function telHref(p){return'tel:'+String(p||'').replace(/[^\d+]/g,'')}
+function waHref(p){let n=String(p||'').replace(/[^\d]/g,'');if(n.startsWith('0'))n='972'+n.slice(1);return'https://wa.me/'+n}
 
 /* ─── SEED ─── */
 function seed(){
@@ -783,13 +848,15 @@ function seed(){
     {id:10,fname:'תמר',lname:'קלמן',company:'פינה טק',phone:'052-7654321',email:'tamar@pina.co.il',status:'lead',leadStage:'חדש',source:'Google',leadType:'עסקי',date:'2026-05-14',notes:[]},
   ];
   DB.deals=[
-    {id:1,name:'רישיון ענן תלת-שנתי',company:'אלפא טק',value:180000,prob:75,stage:'משא ומתן',close:'2026-06-30',created:'2026-03-01'},
-    {id:2,name:'מערכת ERP חדשה',company:'בטא סולושנס',value:320000,prob:45,stage:'הצעה',close:'2026-07-15',created:'2026-03-15'},
-    {id:3,name:'ייעוץ אסטרטגי Q3',company:'גמא גרופ',value:95000,prob:90,stage:'הצעת מחיר',close:'2026-05-31',created:'2026-04-01'},
-    {id:4,name:'שדרוג אבטחת מידע',company:'דלתא דיגיטל',value:145000,prob:60,stage:'הצעה',close:'2026-08-01',created:'2026-04-10'},
-    {id:5,name:'מנוי שנתי Premium',company:'אפסילון',value:48000,prob:80,stage:'ליד',close:'2026-06-01',created:'2026-04-20'},
-    {id:6,name:'פרויקט BI ודוחות',company:'זטא זון',value:220000,prob:35,stage:'ליד',close:'2026-09-01',created:'2026-04-25'},
-    {id:7,name:'הטמעת CRM',company:'אטא עסקים',value:75000,prob:70,stage:'משא ומתן',close:'2026-06-15',created:'2026-05-01'},
+    {id:1,name:'רישיון ענן תלת-שנתי',company:'אלפא טק',value:180000,prob:75,stage:'משא ומתן',status:'open',close:'2026-06-30',created:'2026-03-01'},
+    {id:2,name:'מערכת ERP חדשה',company:'בטא סולושנס',value:320000,prob:45,stage:'הצעה',status:'open',close:'2026-07-15',created:'2026-03-15'},
+    {id:3,name:'ייעוץ אסטרטגי Q3',company:'גמא גרופ',value:95000,prob:90,stage:'הצעת מחיר',status:'open',close:'2026-05-31',created:'2026-04-01'},
+    {id:4,name:'שדרוג אבטחת מידע',company:'דלתא דיגיטל',value:145000,prob:60,stage:'הצעה',status:'open',close:'2026-08-01',created:'2026-04-10'},
+    {id:5,name:'מנוי שנתי Premium',company:'אפסילון',value:48000,prob:80,stage:'ליד',status:'open',close:'2026-06-01',created:'2026-04-20'},
+    {id:6,name:'פרויקט BI ודוחות',company:'זטא זון',value:220000,prob:35,stage:'ליד',status:'open',close:'2026-09-01',created:'2026-04-25'},
+    {id:7,name:'הטמעת CRM',company:'אטא עסקים',value:75000,prob:70,stage:'משא ומתן',status:'open',close:'2026-06-15',created:'2026-05-01'},
+    {id:8,name:'רישוי תוכנה שנתי',company:'רוזן טק',value:62000,prob:100,stage:'הצעת מחיר',status:'won',close:'2026-04-10',created:'2026-02-01',closedDate:'2026-04-08'},
+    {id:9,name:'שדרוג תשתית',company:'פינה טק',value:130000,prob:0,stage:'הצעה',status:'lost',close:'2026-03-20',created:'2026-01-15',closedDate:'2026-03-18'},
   ];
   DB.tasks=[
     {id:1,title:'שיחת פולואו-אפ עם ישראל ישראלי',priority:'high',due:today(),related:'אלפא טק',done:false},
@@ -807,6 +874,14 @@ const PTITLES={dashboard:'לוח בקרה',contacts:'אנשי קשר',leads:'ל�
 const ALABELS={dashboard:'איש קשר',contacts:'איש קשר',leads:'ליד',deals:'עסקה',tasks:'משימה',reports:'דוח'};
 const AMODALS={dashboard:'modal-c',contacts:'modal-c',leads:'modal-l',deals:'modal-d',tasks:'modal-t',reports:'modal-c'};
 
+function toggleSidebar(force){
+  const sb=document.getElementById('sidebar');
+  const ov=document.getElementById('sidebar-overlay');
+  const open=force!==undefined?force:!sb.classList.contains('mobile-open');
+  sb.classList.toggle('mobile-open',open);
+  ov.classList.toggle('open',open);
+}
+
 function nav(page,el){
   document.querySelectorAll('.nav-item').forEach(i=>i.classList.remove('active'));
   el.classList.add('active');
@@ -816,6 +891,7 @@ function nav(page,el){
   document.getElementById('page-title').textContent=PTITLES[page];
   document.getElementById('add-lbl').textContent=ALABELS[page];
   document.getElementById('gsearch').value='';
+  toggleSidebar(false);
   if(page==='contacts')renderContacts();
   if(page==='leads')renderLeads();
   if(page==='deals'){renderDeals();updatePipelineTotal()}
@@ -823,7 +899,20 @@ function nav(page,el){
   if(page==='reports')renderReports();
 }
 
-function openAddModal(){document.getElementById(AMODALS[curPage]).classList.add('open')}
+function openAddModal(){
+  editContactId=null;editLeadId=null;editTaskId=null;editDealId=null;
+  document.getElementById('modal-c-title').textContent='איש קשר חדש';
+  document.getElementById('modal-l-title').textContent='ליד חדש';
+  document.getElementById('modal-t-title').textContent='משימה חדשה';
+  document.getElementById('modal-d-title').textContent='עסקה חדשה';
+  ['cf-fn','cf-ln','cf-co','cf-ph','cf-em'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('cf-st').value='active';document.getElementById('cf-tp').value='פרטי';document.getElementById('cf-sr').value='הפניה';
+  ['lf-fn','lf-ln','lf-co','lf-ph'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('lf-fu').value='';
+  document.getElementById('tf-ti').value='';document.getElementById('tf-rl').value='';document.getElementById('tf-du').value='';
+  document.getElementById('df-nm').value='';document.getElementById('df-co').value='';document.getElementById('df-vl').value='';document.getElementById('df-pb').value='';document.getElementById('df-cl').value='';
+  document.getElementById(AMODALS[curPage]).classList.add('open');
+}
 function closeModal(id){document.getElementById(id).classList.remove('open')}
 document.querySelectorAll('.modal-bg').forEach(b=>b.addEventListener('click',e=>{if(e.target===b)b.classList.remove('open')}));
 document.addEventListener('keydown',e=>{
@@ -843,9 +932,53 @@ function toast(msg,type='ok'){
   document.getElementById('toast-wrap').appendChild(el);
   setTimeout(()=>el.remove(),3200);
 }
+function toastUndo(msg){
+  const el=document.createElement('div');
+  el.className='toast';
+  el.style.animation='tIn .2s ease';
+  el.innerHTML=`<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#EF4444" stroke-width="2.5"><circle cx="12" cy="12" r="10"/></svg> ${msg} <button class="btn btn-ghost btn-sm" style="margin-right:6px;height:22px;padding:0 8px;font-size:11px" onclick="undoDelete();this.closest('.toast').remove()">בטל</button>`;
+  document.getElementById('toast-wrap').appendChild(el);
+  setTimeout(()=>{el.style.animation='tOut .2s ease forwards';setTimeout(()=>el.remove(),200)},5000);
+}
+function undoDelete(){
+  if(!lastDeleted)return;
+  const{type,item,index}=lastDeleted;
+  if(type==='contact'){DB.contacts.splice(index,0,item);persist();renderContacts();updateBadges();updateDash();if(curPage==='leads')renderLeads();toast(`${item.fname} ${item.lname} שוחזר`)}
+  else if(type==='task'){DB.tasks.splice(index,0,item);persist();renderTasks();updateBadges();toast('משימה שוחזרה')}
+  else if(type==='deal'){DB.deals.splice(index,0,item);persist();renderDeals();updatePipelineTotal();updateDash();renderPipeRows();toast('עסקה שוחזרה')}
+  lastDeleted=null;
+}
 
 /* ─── SEARCH ─── */
-function onSearch(q){if(curPage==='contacts')renderContacts(q)}
+function onSearch(q){
+  if(curPage==='contacts')renderContacts(q);
+  const box=document.getElementById('gsearch-results');
+  if(!q){box.style.display='none';box.innerHTML='';return}
+  const ql=q.toLowerCase();
+  const results=[];
+  DB.contacts.filter(c=>c.status!=='lead'&&(c.fname+' '+c.lname+' '+c.company+' '+c.phone+' '+c.email).toLowerCase().includes(ql)).slice(0,4)
+    .forEach(c=>results.push({icon:'👤',title:`${c.fname} ${c.lname}`,sub:c.company,action:()=>{nav('contacts',document.querySelectorAll('.nav-item')[1]);openDrawer(c.id)}}));
+  DB.contacts.filter(c=>c.status==='lead'&&(c.fname+' '+c.lname+' '+c.company+' '+c.phone).toLowerCase().includes(ql)).slice(0,4)
+    .forEach(c=>results.push({icon:'🎯',title:`${c.fname} ${c.lname}`,sub:(c.company||'')+' · '+(c.leadStage||'חדש'),action:()=>{nav('leads',document.querySelectorAll('.nav-item')[2]);openDrawer(c.id)}}));
+  DB.deals.filter(d=>(d.name+' '+d.company).toLowerCase().includes(ql)).slice(0,4)
+    .forEach(d=>results.push({icon:'💼',title:d.name,sub:d.company+' · '+fmtM(d.value),action:()=>{nav('deals',document.querySelectorAll('.nav-item')[3]);openDealDrawer(d.id)}}));
+  DB.tasks.filter(t=>(t.title+' '+t.related).toLowerCase().includes(ql)).slice(0,4)
+    .forEach(t=>results.push({icon:'✅',title:t.title,sub:t.related,action:()=>{nav('tasks',document.querySelectorAll('.nav-item')[4])}}));
+  if(!results.length){box.innerHTML='<div style="padding:14px;text-align:center;color:var(--text3);font-size:12.5px">אין תוצאות</div>';box.style.display='block';return}
+  box.innerHTML=results.map((r,i)=>`<div class="cmd-item" onclick="gsearchExec(${i})"><div class="cmd-item-icon" style="background:var(--card)">${r.icon}</div><div><div class="cmd-item-title">${esc(r.title)}</div><div class="cmd-item-sub">${esc(r.sub||'')}</div></div></div>`).join('');
+  window._gsearchResults=results;
+  box.style.display='block';
+}
+function gsearchExec(i){
+  const r=window._gsearchResults?.[i];if(!r)return;
+  document.getElementById('gsearch-results').style.display='none';
+  document.getElementById('gsearch').value='';
+  r.action();
+}
+document.addEventListener('click',e=>{
+  const box=document.getElementById('gsearch-results');
+  if(box&&!e.target.closest('.search-wrap'))box.style.display='none';
+});
 
 /* ─── CONTACTS ─── */
 function filterC(f,el){
@@ -883,38 +1016,71 @@ function renderContacts(q=''){
     const typeLbl=c.ctype==='עסקי'?'לקוח עסקי':'לקוח פרטי';
     const typeCls=c.ctype==='עסקי'?'b-blue':'b-purple';
     return`<tr onclick="openDrawer(${c.id})" tabindex="0" style="cursor:pointer" onkeydown="if(event.key==='Enter')openDrawer(${c.id})">
-      <td><div class="c-cell"><div class="c-av" style="background:${avc(i)}">${ini(c)}</div><div><div class="c-name">${c.fname} ${c.lname}</div></div></div></td>
+      <td><div class="c-cell"><div class="c-av" style="background:${avc(i)}">${esc(ini(c))}</div><div><div class="c-name">${esc(c.fname)} ${esc(c.lname)}</div></div></div></td>
       <td><span style="color:${sclr};font-weight:600;font-size:13px">${slbl}</span></td>
-      <td><span style="color:var(--accent);font-weight:500;font-size:13px">David King</span></td>
-      <td style="color:var(--text2)">${c.email}</td>
-      <td style="color:var(--accent);font-weight:500">${c.phone}</td>
-      <td><span style="font-weight:600;color:${srcclr}">${c.source||'—'}</span></td>
+      <td><span style="color:var(--accent);font-weight:500;font-size:13px">${esc(SETTINGS.userName)}</span></td>
+      <td style="color:var(--text2)">${esc(c.email)}</td>
+      <td style="color:var(--accent);font-weight:500">${esc(c.phone)}</td>
+      <td><span style="font-weight:600;color:${srcclr}">${esc(c.source)||'—'}</span></td>
       <td><span class="badge ${typeCls}">${typeLbl}</span></td>
       <td>${fmtD(c.date)}</td>
-      <td onclick="event.stopPropagation()"><button class="btn btn-ghost btn-sm btn-icon" onclick="deleteContact(${c.id})" aria-label="מחק">
-        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
-      </button></td>
+      <td onclick="event.stopPropagation()"><div style="display:flex;gap:4px;justify-content:flex-end">
+        <button class="btn btn-ghost btn-sm btn-icon" onclick="openEditContact(${c.id})" aria-label="ערוך">
+          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+        </button>
+        <button class="btn btn-ghost btn-sm btn-icon" onclick="deleteContact(${c.id})" aria-label="מחק">
+          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        </button>
+      </div></td>
     </tr>`}).join('');
+}
+
+function openEditContact(id){
+  const c=DB.contacts.find(x=>x.id===id);if(!c)return;
+  editContactId=id;
+  document.getElementById('modal-c-title').textContent='עריכת איש קשר';
+  document.getElementById('cf-fn').value=c.fname;document.getElementById('cf-ln').value=c.lname;
+  document.getElementById('cf-co').value=c.company==='—'?'':c.company;
+  document.getElementById('cf-ph').value=c.phone==='—'?'':c.phone;
+  document.getElementById('cf-em').value=c.email==='—'?'':c.email;
+  document.getElementById('cf-st').value=c.status==='lead'?'active':c.status;
+  document.getElementById('cf-tp').value=c.ctype||'פרטי';
+  document.getElementById('cf-sr').value=c.source||'הפניה';
+  document.getElementById('modal-c').classList.add('open');
 }
 
 function saveContact(){
   const fn=document.getElementById('cf-fn').value.trim(),ln=document.getElementById('cf-ln').value.trim();
   if(!fn||!ln){toast('נא למלא שם','err');return}
   const phone=document.getElementById('cf-ph').value.trim()||'—';
-  const dup=phone!=='—'&&DB.contacts.find(x=>x.phone===phone);
+  const dup=phone!=='—'&&DB.contacts.find(x=>x.phone===phone&&x.id!==editContactId);
   if(dup)toast(`⚠️ טלפון כבר קיים אצל ${dup.fname} ${dup.lname}`,'info');
+  if(editContactId){
+    const c=DB.contacts.find(x=>x.id===editContactId);
+    if(c){
+      Object.assign(c,{fname:fn,lname:ln,company:document.getElementById('cf-co').value.trim()||'—',phone,email:document.getElementById('cf-em').value.trim()||'—',status:document.getElementById('cf-st').value,ctype:document.getElementById('cf-tp').value,source:document.getElementById('cf-sr').value});
+      persist();closeModal('modal-c');renderContacts();updateBadges();updateDash();
+      toast(`${fn} ${ln} עודכן`);
+    }
+    editContactId=null;
+    return;
+  }
   DB.contacts.unshift({id:Date.now(),fname:fn,lname:ln,company:document.getElementById('cf-co').value.trim()||'—',phone,email:document.getElementById('cf-em').value.trim()||'—',status:document.getElementById('cf-st').value,ctype:document.getElementById('cf-tp').value,source:document.getElementById('cf-sr').value,date:today(),notes:[]});
   persist();closeModal('modal-c');renderContacts();updateBadges();updateDash();
-  pushAct(`איש קשר חדש: <strong>${fn} ${ln}</strong>`,'#5B7CF6');
+  pushAct(`איש קשר חדש: <strong>${esc(fn)} ${esc(ln)}</strong>`,'#5B7CF6');
   toast(`${fn} ${ln} נוסף`);
   ['cf-fn','cf-ln','cf-co','cf-ph','cf-em'].forEach(id=>document.getElementById(id).value='');
 }
 
 function deleteContact(id){
   const c=DB.contacts.find(x=>x.id===id);
-  DB.contacts=DB.contacts.filter(x=>x.id!==id);
+  if(!c)return;
+  if(!confirm(`למחוק את ${c.fname} ${c.lname}?`))return;
+  const idx=DB.contacts.indexOf(c);
+  DB.contacts.splice(idx,1);
   persist();renderContacts();updateBadges();updateDash();
-  if(c)toast(`${c.fname} ${c.lname} נמחק`,'err');
+  lastDeleted={type:'contact',item:c,index:idx};
+  toastUndo(`${c.fname} ${c.lname} נמחק`);
 }
 
 /* ─── LEADS ─── */
@@ -926,8 +1092,11 @@ function renderLeads(){
 function renderLeadsSidebar(){
   const el=document.getElementById('leads-sidebar');if(!el)return;
   const all=DB.contacts.filter(c=>c.status==='lead');
+  const td=today();
+  const dueToday=all.filter(c=>c.followUp&&c.followUp<=td).length;
   let html=`<div class="ls-lbl">תצוגות</div>`;
   html+=`<div class="ls-item${leadsFilter==='all'?' active':''}" onclick="setLeadsFilter('all')"><span style="flex:1">כל הלידים</span><span class="ls-cnt">${all.length}</span></div>`;
+  html+=`<div class="ls-item${leadsFilter==='followup'?' active':''}" onclick="setLeadsFilter('followup')"><span style="width:7px;height:7px;border-radius:50%;background:#EF4444;flex-shrink:0;display:inline-block"></span><span style="flex:1">לפולואפ היום</span><span class="ls-cnt" style="${dueToday?'background:var(--red-dim);color:var(--red)':''}">${dueToday}</span></div>`;
   html+=`<div class="ls-sep"></div><div class="ls-lbl">שלבים</div>`;
   LEAD_STAGES.forEach(s=>{
     const cnt=all.filter(c=>(c.leadStage||'חדש')===s.name).length;
@@ -947,14 +1116,16 @@ function setLeadsFilter(f){
 
 function renderLeadsTable(){
   let list=DB.contacts.filter(c=>c.status==='lead');
-  if(leadsFilter!=='all')list=list.filter(c=>(c.leadStage||'חדש')===leadsFilter);
+  const td=today();
+  if(leadsFilter==='followup')list=list.filter(c=>c.followUp&&c.followUp<=td);
+  else if(leadsFilter!=='all')list=list.filter(c=>(c.leadStage||'חדש')===leadsFilter);
   const q=(document.getElementById('leads-search')?.value||'').toLowerCase();
   if(q)list=list.filter(c=>(c.fname+' '+c.lname+c.company+c.phone).toLowerCase().includes(q));
   const tot=document.getElementById('leads-total');if(tot)tot.textContent=list.length;
   const wrap=document.getElementById('leads-table-wrap');if(!wrap)return;
   if(!list.length){wrap.innerHTML=`<div class="empty"><svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></svg><p>אין לידים בשלב זה</p></div>`;return}
   wrap.innerHTML=`<div class="tbl-card" style="border-radius:var(--r)"><table class="data-tbl"><thead><tr>
-    <th>שם ליד</th><th>סטטוס</th><th>טלפון</th><th>מקור הגעה</th><th>סוג לקוח</th><th>נוצר בתאריך</th><th></th>
+    <th>שם ליד</th><th>סטטוס</th><th>טלפון</th><th>מקור הגעה</th><th>סוג לקוח</th><th>פולואפ</th><th></th>
   </tr></thead><tbody>${list.map((c,i)=>{
     const stage=c.leadStage||'חדש';
     const sclr=STAGE_CLR[stage]||'#94A3B8';
@@ -962,14 +1133,17 @@ function renderLeadsTable(){
     const typeLabel=c.leadType==='עסקי'?'לקוח עסקי':'לקוח פרטי';
     const typeCls=c.leadType==='עסקי'?'b-blue':'b-purple';
     const stageOpts=LEAD_STAGES.map(s=>`<option value="${s.name}"${stage===s.name?' selected':''}>${s.name}</option>`).join('');
+    const fuOverdue=c.followUp&&c.followUp<=td;
+    const fuHtml=c.followUp?`<span style="color:${fuOverdue?'var(--red)':'var(--text2)'};font-weight:${fuOverdue?700:400}">${fmtD(c.followUp)}${fuOverdue?' ⚠':''}</span>`:'<span style="color:var(--text3)">—</span>';
     return`<tr onclick="openDrawer(${c.id})" tabindex="0" style="cursor:pointer" onkeydown="if(event.key==='Enter')openDrawer(${c.id})">
-      <td><div class="c-cell"><div class="c-av" style="background:${avc(i)}">${ini(c)}</div><div><div class="c-name">${c.fname} ${c.lname}</div></div></div></td>
+      <td><div class="c-cell"><div class="c-av" style="background:${avc(i)}">${esc(ini(c))}</div><div><div class="c-name">${esc(c.fname)} ${esc(c.lname)}</div></div></div></td>
       <td onclick="event.stopPropagation()"><div style="display:flex;align-items:center;gap:5px"><span style="width:7px;height:7px;border-radius:50%;background:${sclr};flex-shrink:0"></span><select class="stage-sel" style="color:${sclr}" onchange="setLeadStage(${c.id},this.value)">${stageOpts}</select></div></td>
-      <td style="color:var(--accent);font-weight:500">${c.phone}</td>
-      <td><span style="font-weight:600;color:${srcclr}">${c.source||'—'}</span></td>
+      <td style="color:var(--accent);font-weight:500">${esc(c.phone)}</td>
+      <td><span style="font-weight:600;color:${srcclr}">${esc(c.source)||'—'}</span></td>
       <td><span class="badge ${typeCls}">${typeLabel}</span></td>
-      <td>${fmtD(c.date)}</td>
+      <td>${fuHtml}</td>
       <td onclick="event.stopPropagation()"><div style="display:flex;gap:5px">
+        <button class="btn btn-ghost btn-sm btn-icon" onclick="openEditLead(${c.id})" aria-label="ערוך"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button>
         <button class="btn btn-primary btn-sm" onclick="convertLead(${c.id})">המר</button>
         <button class="btn btn-red btn-sm btn-icon" onclick="deleteLead(${c.id})" aria-label="מחק"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
       </div></td>
@@ -986,30 +1160,68 @@ function setLeadStage(id,stage){
 function convertLead(id){
   const c=DB.contacts.find(x=>x.id===id);if(!c)return;
   c.status='active';
-  delete c.leadStage;
+  delete c.leadStage;delete c.followUp;
   persist();renderLeads();updateBadges();updateDash();
-  pushAct(`ליד <strong>${c.fname} ${c.lname}</strong> הומר לאיש קשר`,'#22C55E');
+  pushAct(`ליד <strong>${esc(c.fname)} ${esc(c.lname)}</strong> הומר לאיש קשר`,'#22C55E');
   toast(`${c.fname} ${c.lname} הומר לאיש קשר`);
+  if(confirm(`${c.fname} ${c.lname} הומר לאיש קשר. לפתוח עסקה חדשה עבורו?`)){
+    editDealId=null;
+    document.getElementById('modal-d-title').textContent='עסקה חדשה';
+    document.getElementById('df-nm').value='';
+    document.getElementById('df-co').value=c.company==='—'?'':c.company;
+    document.getElementById('df-vl').value='';document.getElementById('df-pb').value='';document.getElementById('df-cl').value='';
+    document.getElementById('df-sg').value='ליד';
+    document.getElementById('modal-d').classList.add('open');
+  }
 }
 
 function deleteLead(id){
   const c=DB.contacts.find(x=>x.id===id);
-  DB.contacts=DB.contacts.filter(x=>x.id!==id);
+  if(!c)return;
+  if(!confirm(`למחוק את ${c.fname} ${c.lname}?`))return;
+  const idx=DB.contacts.indexOf(c);
+  DB.contacts.splice(idx,1);
   persist();renderLeads();updateBadges();updateDash();
-  if(c)toast(`${c.fname} ${c.lname} נמחק`,'err');
+  lastDeleted={type:'contact',item:c,index:idx};
+  toastUndo(`${c.fname} ${c.lname} נמחק`);
+}
+
+function openEditLead(id){
+  const c=DB.contacts.find(x=>x.id===id);if(!c)return;
+  editLeadId=id;
+  document.getElementById('modal-l-title').textContent='עריכת ליד';
+  document.getElementById('lf-fn').value=c.fname;document.getElementById('lf-ln').value=c.lname;
+  document.getElementById('lf-co').value=c.company==='—'?'':c.company;
+  document.getElementById('lf-ph').value=c.phone==='—'?'':c.phone;
+  document.getElementById('lf-sr').value=c.source||'הפניה';
+  document.getElementById('lf-tp').value=c.leadType||'פרטי';
+  document.getElementById('lf-sg').value=c.leadStage||'חדש';
+  document.getElementById('lf-fu').value=c.followUp||'';
+  document.getElementById('modal-l').classList.add('open');
 }
 
 function saveLead(){
   const fn=document.getElementById('lf-fn').value.trim(),ln=document.getElementById('lf-ln').value.trim();
   if(!fn||!ln){toast('נא למלא שם','err');return}
   const _lph=document.getElementById('lf-ph').value.trim()||'—';
-  const _ldup=_lph!=='—'&&DB.contacts.find(x=>x.phone===_lph);
+  const _ldup=_lph!=='—'&&DB.contacts.find(x=>x.phone===_lph&&x.id!==editLeadId);
   if(_ldup)toast(`⚠️ טלפון כבר קיים אצל ${_ldup.fname} ${_ldup.lname}`,'info');
-  DB.contacts.unshift({id:Date.now(),fname:fn,lname:ln,company:document.getElementById('lf-co').value.trim()||'—',phone:_lph,email:'—',status:'lead',leadStage:document.getElementById('lf-sg').value,leadType:document.getElementById('lf-tp').value,source:document.getElementById('lf-sr').value,date:today(),notes:[]});
+  const followUp=document.getElementById('lf-fu').value||null;
+  if(editLeadId){
+    const c=DB.contacts.find(x=>x.id===editLeadId);
+    if(c){
+      Object.assign(c,{fname:fn,lname:ln,company:document.getElementById('lf-co').value.trim()||'—',phone:_lph,leadStage:document.getElementById('lf-sg').value,leadType:document.getElementById('lf-tp').value,source:document.getElementById('lf-sr').value,followUp});
+      persist();closeModal('modal-l');renderLeads();updateBadges();updateDash();
+      toast(`${fn} ${ln} עודכן`);
+    }
+    editLeadId=null;
+    return;
+  }
+  DB.contacts.unshift({id:Date.now(),fname:fn,lname:ln,company:document.getElementById('lf-co').value.trim()||'—',phone:_lph,email:'—',status:'lead',leadStage:document.getElementById('lf-sg').value,leadType:document.getElementById('lf-tp').value,source:document.getElementById('lf-sr').value,followUp,date:today(),notes:[]});
   persist();closeModal('modal-l');renderLeads();updateBadges();updateDash();
-  pushAct(`ליד חדש: <strong>${fn} ${ln}</strong>`,'#F59E0B');
+  pushAct(`ליד חדש: <strong>${esc(fn)} ${esc(ln)}</strong>`,'#F59E0B');
   toast(`${fn} ${ln} נוסף כליד`);
-  ['lf-fn','lf-ln','lf-co','lf-ph'].forEach(id=>document.getElementById(id).value='');
+  ['lf-fn','lf-ln','lf-co','lf-ph','lf-fu'].forEach(id=>document.getElementById(id).value='');
 }
 
 /* ─── CONTACT DRAWER ─── */
@@ -1040,30 +1252,33 @@ function drawerTab(tab,el){
   if(!c)return;
   const body=document.getElementById('drawer-body');
   if(tab==='info'){
+    const hasPhone=c.phone&&c.phone!=='—';
+    const hasEmail=c.email&&c.email!=='—';
     body.innerHTML=`
-      <div class="d-field"><div class="d-field-lbl">טלפון</div><div class="d-field-val">${c.phone}</div></div>
-      <div class="d-field"><div class="d-field-lbl">אימייל</div><div class="d-field-val" style="color:var(--accent)">${c.email}</div></div>
-      <div class="d-field"><div class="d-field-lbl">חברה</div><div class="d-field-val">${c.company}</div></div>
+      <div class="d-field"><div class="d-field-lbl">טלפון</div><div class="d-field-val">${esc(c.phone)}</div></div>
+      <div class="d-field"><div class="d-field-lbl">אימייל</div><div class="d-field-val" style="color:var(--accent)">${esc(c.email)}</div></div>
+      <div class="d-field"><div class="d-field-lbl">חברה</div><div class="d-field-val">${esc(c.company)}</div></div>
       <div class="d-field"><div class="d-field-lbl">תאריך הוספה</div><div class="d-field-val">${fmtD(c.date)}</div></div>
       <div class="d-field"><div class="d-field-lbl">סטטוס</div><div class="d-field-val">${STATUS_BADGE[c.status]||''}</div></div>
       <div class="d-section-title">פעולות מהירות</div>
       <div class="quick-actions">
-        <button class="btn btn-ghost btn-sm" onclick="toast('מתקשר ל-${c.phone}','info')"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 12 19.79 19.79 0 0 1 1.63 3.18 2 2 0 0 1 3.6 1h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L7.91 8.61a16 16 0 0 0 6 6l.92-.92a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/></svg> שיחה</button>
-        <button class="btn btn-ghost btn-sm" onclick="toast('שולח מייל','info')"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg> מייל</button>
-        <button class="btn btn-ghost btn-sm" onclick="document.getElementById('tf-rl').value='${c.fname} ${c.lname}';closeDrawer();document.getElementById('modal-t').classList.add('open')"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg> משימה</button>
+        <a class="btn btn-ghost btn-sm" href="${hasPhone?telHref(c.phone):'#'}" style="${hasPhone?'':'opacity:.4;pointer-events:none'}text-decoration:none"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 12 19.79 19.79 0 0 1 1.63 3.18 2 2 0 0 1 3.6 1h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L7.91 8.61a16 16 0 0 0 6 6l.92-.92a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/></svg> שיחה</a>
+        <a class="btn btn-ghost btn-sm" href="${hasPhone?waHref(c.phone):'#'}" target="_blank" rel="noopener" style="${hasPhone?'':'opacity:.4;pointer-events:none'}text-decoration:none;color:#25D366"><svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><path d="M12.04 2C6.58 2 2.13 6.45 2.13 11.91c0 1.75.46 3.45 1.32 4.95L2.05 22l5.25-1.38c1.45.79 3.08 1.21 4.74 1.21 5.46 0 9.91-4.45 9.91-9.91C21.95 6.45 17.5 2 12.04 2zm0 18.15c-1.48 0-2.93-.4-4.2-1.15l-.3-.18-3.12.82.83-3.04-.2-.31a8.18 8.18 0 0 1-1.26-4.38c0-4.54 3.7-8.24 8.25-8.24 4.54 0 8.24 3.7 8.24 8.24 0 4.55-3.7 8.24-8.24 8.24z"/></svg> וואטסאפ</a>
+        <a class="btn btn-ghost btn-sm" href="${hasEmail?'mailto:'+c.email:'#'}" style="${hasEmail?'':'opacity:.4;pointer-events:none'}text-decoration:none"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg> מייל</a>
+        <button class="btn btn-ghost btn-sm" onclick="document.getElementById('tf-rl').value='${esc(c.fname)} ${esc(c.lname)}';closeDrawer();document.getElementById('modal-t').classList.add('open')"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg> משימה</button>
       </div>`;
   } else if(tab==='notes'){
     const notes=c.notes||[];
     body.innerHTML=`
       <textarea class="note-input" id="note-inp" rows="3" placeholder="הוסף הערה..."></textarea>
       <button class="btn btn-primary btn-sm" style="margin:8px 0 14px" onclick="saveNote()">שמור הערה</button>
-      ${notes.length?notes.map(n=>`<div class="note-item"><div class="note-text">${n.text}</div><div class="note-date">${fmtD(n.date)}</div></div>`).join(''):'<div style="color:var(--text3);font-size:13px">אין הערות עדיין</div>'}`;
+      ${notes.length?notes.map(n=>`<div class="note-item"><div class="note-text">${esc(n.text)}</div><div class="note-date">${fmtD(n.date)}</div></div>`).join(''):'<div style="color:var(--text3);font-size:13px">אין הערות עדיין</div>'}`;
   } else if(tab==='deals'){
     const deals=DB.deals.filter(d=>d.company===c.company);
     body.innerHTML=deals.length?deals.map(d=>`
-      <div class="drawer-deal-item">
-        <div class="ddi-name">${d.name}</div>
-        <div class="ddi-meta"><span>${STAGES.find(s=>s.name===d.stage)?.name||d.stage}</span><span style="font-family:'Urbanist',sans-serif;font-weight:700;color:var(--text)">${fmtM(d.value)}</span></div>
+      <div class="drawer-deal-item" style="cursor:pointer" onclick="closeDrawer();nav('deals',document.querySelectorAll('.nav-item')[3]);openDealDrawer(${d.id})">
+        <div class="ddi-name">${esc(d.name)}</div>
+        <div class="ddi-meta"><span>${d.status==='won'?'נסגרה':d.status==='lost'?'אבודה':esc(d.stage)}</span><span style="font-family:'Urbanist',sans-serif;font-weight:700;color:var(--text)">${fmtM(d.value)}</span></div>
       </div>`).join(''):'<div style="color:var(--text3);font-size:13px">אין עסקאות מקושרות</div>';
   } else if(tab==='activity'){
     body.innerHTML=`
@@ -1085,10 +1300,44 @@ function saveNote(){
 }
 
 /* ─── DEALS ─── */
+function openDeals(){return DB.deals.filter(d=>(d.status||'open')==='open')}
+function wonDeals(){return DB.deals.filter(d=>d.status==='won')}
+function lostDeals(){return DB.deals.filter(d=>d.status==='lost')}
 function updatePipelineTotal(){
-  const total=DB.deals.reduce((s,d)=>s+d.value,0);
+  const total=openDeals().reduce((s,d)=>s+d.value,0);
   const el=document.getElementById('pipeline-total');
   if(el)el.textContent=fmtM(total);
+  const won=wonDeals().reduce((s,d)=>s+d.value,0);
+  const wEl=document.getElementById('pipeline-won');
+  if(wEl)wEl.textContent=fmtM(won);
+}
+function toggleClosedDeals(){
+  closedDealsOpen=!closedDealsOpen;
+  document.getElementById('closed-deals-view').style.display=closedDealsOpen?'block':'none';
+  document.getElementById('closed-toggle-btn').classList.toggle('btn-primary',closedDealsOpen);
+  document.getElementById('closed-toggle-btn').classList.toggle('btn-ghost',!closedDealsOpen);
+  if(closedDealsOpen)renderClosedDeals();
+}
+function renderClosedDeals(){
+  const el=document.getElementById('closed-deals-view');if(!el)return;
+  const closed=[...wonDeals(),...lostDeals()].sort((a,b)=>new Date(b.closedDate||b.close)-new Date(a.closedDate||a.close));
+  if(!closed.length){el.innerHTML=`<div class="tbl-card"><div class="empty"><p>אין עסקאות שנסגרו עדיין</p></div></div>`;return}
+  el.innerHTML=`<div class="tbl-card"><table class="data-tbl"><thead><tr><th>שם</th><th>לקוח</th><th>שווי</th><th>סטטוס</th><th>תאריך סגירה</th><th></th></tr></thead><tbody>
+    ${closed.map((d,i)=>`<tr>
+      <td><div class="c-cell"><div class="c-av" style="background:${avc(i)}">${esc(d.company[0]||'?')}</div><div><div class="c-name">${esc(d.name)}</div></div></div></td>
+      <td>${esc(d.company)}</td>
+      <td><span style="font-family:'Urbanist',sans-serif;font-weight:700">${fmtM(d.value)}</span></td>
+      <td><span class="badge ${d.status==='won'?'b-green':'b-red'}">${d.status==='won'?'נסגרה בהצלחה':'אבודה'}</span></td>
+      <td>${fmtD(d.closedDate||d.close)}</td>
+      <td><button class="btn btn-ghost btn-sm" onclick="reopenDeal(${d.id})">פתח מחדש</button></td>
+    </tr>`).join('')}
+  </tbody></table></div>`;
+}
+function reopenDeal(id){
+  const d=DB.deals.find(x=>x.id===id);if(!d)return;
+  d.status='open';delete d.closedDate;
+  persist();renderDeals();renderClosedDeals();updatePipelineTotal();updateDash();renderPipeRows();
+  toast(`${d.name} נפתחה מחדש`);
 }
 
 function setDealView(v){
@@ -1105,10 +1354,10 @@ function renderDeals(){
 
 function renderKanban(){
   const el=document.getElementById('deals-view');
+  const open=openDeals();
   el.innerHTML=`<div class="kanban-wrap">${STAGES.map(stage=>{
-    const cards=DB.deals.filter(d=>d.stage===stage.name);
+    const cards=open.filter(d=>d.stage===stage.name);
     const total=cards.reduce((s,d)=>s+d.value,0);
-    const age=cards.map(d=>daysAgo(d.created));
     return`<div class="k-col">
       <div class="k-col-head">
         <div class="k-col-meta">
@@ -1123,20 +1372,20 @@ function renderKanban(){
           const daysSince=daysAgo(d.created);
           const isOld=daysSince>30;
           return`<div class="deal-card" tabindex="0" draggable="true" ondragstart="dragStart(event,${d.id})" ondragend="dragEnd(event)" onclick="openDealDrawer(${d.id})" onkeydown="if(event.key==='Enter')openDealDrawer(${d.id})">
-            <div class="d-name">${d.name}</div>
-            <div class="d-co">${d.company}</div>
+            <div class="d-name">${esc(d.name)}</div>
+            <div class="d-co">${esc(d.company)}</div>
             <div class="d-prob-bar"><div class="d-prob-fill" style="width:${d.prob}%;background:${probColor}"></div></div>
             <div class="d-meta">
               <div class="d-val">${fmtM(d.value)}</div>
               <div class="d-prob-txt">${d.prob}%</div>
             </div>
             <div class="d-foot">
-              <div class="d-owner" style="background:${avc(i)}">${d.company[0]}</div>
+              <div class="d-owner" style="background:${avc(i)}">${esc(d.company[0]||'?')}</div>
               <div class="d-age ${isOld?'hot':'ok'}">${daysSince}ד</div>
               <div class="d-date">${fmtD(d.close)}</div>
             </div>
           </div>`}).join('')}
-        <button class="k-add-btn" onclick="document.getElementById('df-sg').value='${stage.name}';document.getElementById('modal-d').classList.add('open')">
+        <button class="k-add-btn" onclick="editDealId=null;document.getElementById('modal-d-title').textContent='עסקה חדשה';document.getElementById('df-sg').value='${stage.name}';document.getElementById('modal-d').classList.add('open')">
           <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg> הוסף
         </button>
       </div>
@@ -1145,14 +1394,14 @@ function renderKanban(){
 
 function renderDealList(){
   const el=document.getElementById('deals-view');
-  if(!DB.deals.length){el.innerHTML=`<div class="tbl-card"><div class="empty"><svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2" y="3" width="6" height="18" rx="1"/><rect x="9" y="8" width="6" height="13" rx="1"/><rect x="16" y="13" width="6" height="8" rx="1"/></svg><p>אין עסקאות</p></div></div>`;return}
+  const open=openDeals();
+  if(!open.length){el.innerHTML=`<div class="tbl-card"><div class="empty"><svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2" y="3" width="6" height="18" rx="1"/><rect x="9" y="8" width="6" height="13" rx="1"/><rect x="16" y="13" width="6" height="8" rx="1"/></svg><p>אין עסקאות פתוחות</p></div></div>`;return}
   el.innerHTML=`<div class="tbl-card"><table class="data-tbl"><thead><tr><th>שם</th><th>לקוח</th><th>שווי</th><th>הסתברות</th><th>שלב</th><th>סגירה</th></tr></thead><tbody>
-    ${DB.deals.map((d,i)=>{
-      const s=STAGES.find(x=>x.name===d.stage);
+    ${open.map((d,i)=>{
       const pc=d.prob>=70?'var(--green)':d.prob>=40?'var(--amber)':'var(--red)';
-      return`<tr onclick="toast('${d.name}','info')" tabindex="0">
-        <td><div class="c-cell"><div class="c-av" style="background:${avc(i)}">${d.company[0]}</div><div><div class="c-name">${d.name}</div><div class="c-co">${d.company}</div></div></div></td>
-        <td>${d.company}</td>
+      return`<tr onclick="openDealDrawer(${d.id})" tabindex="0" style="cursor:pointer">
+        <td><div class="c-cell"><div class="c-av" style="background:${avc(i)}">${esc(d.company[0]||'?')}</div><div><div class="c-name">${esc(d.name)}</div><div class="c-co">${esc(d.company)}</div></div></div></td>
+        <td>${esc(d.company)}</td>
         <td><span style="font-family:'Urbanist',sans-serif;font-weight:700">${fmtM(d.value)}</span></td>
         <td><span style="color:${pc};font-weight:600">${d.prob}%</span></td>
         <td><span class="badge" style="background:rgba(255,255,255,.05);color:var(--text2)">${d.stage}</span></td>
@@ -1162,12 +1411,36 @@ function renderDealList(){
   </tbody></table></div>`;
 }
 
+function openEditDeal(id){
+  const d=DB.deals.find(x=>x.id===id);if(!d)return;
+  editDealId=id;
+  document.getElementById('modal-d-title').textContent='עריכת עסקה';
+  document.getElementById('df-nm').value=d.name;
+  document.getElementById('df-co').value=d.company==='—'?'':d.company;
+  document.getElementById('df-vl').value=d.value;
+  document.getElementById('df-pb').value=d.prob;
+  document.getElementById('df-sg').value=d.stage;
+  document.getElementById('df-cl').value=d.close;
+  closeDealDrawer();
+  document.getElementById('modal-d').classList.add('open');
+}
+
 function saveDeal(){
   const name=document.getElementById('df-nm').value.trim();
   if(!name){toast('נא למלא שם','err');return}
-  DB.deals.unshift({id:Date.now(),name,company:document.getElementById('df-co').value.trim()||'—',value:Number(document.getElementById('df-vl').value)||0,prob:Number(document.getElementById('df-pb').value)||50,stage:document.getElementById('df-sg').value,close:document.getElementById('df-cl').value||fd(30),created:today(),notes:[]});
-  persist();closeModal('modal-d');renderDeals();updatePipelineTotal();updateDash();
-  pushAct(`עסקה חדשה: <strong>${name}</strong>`,'#F59E0B');
+  if(editDealId){
+    const d=DB.deals.find(x=>x.id===editDealId);
+    if(d){
+      Object.assign(d,{name,company:document.getElementById('df-co').value.trim()||'—',value:Number(document.getElementById('df-vl').value)||0,prob:Number(document.getElementById('df-pb').value)||50,stage:document.getElementById('df-sg').value,close:document.getElementById('df-cl').value||d.close});
+      persist();closeModal('modal-d');renderDeals();updatePipelineTotal();updateDash();renderPipeRows();
+      toast(`עסקה "${name}" עודכנה`);
+    }
+    editDealId=null;
+    return;
+  }
+  DB.deals.unshift({id:Date.now(),name,company:document.getElementById('df-co').value.trim()||'—',value:Number(document.getElementById('df-vl').value)||0,prob:Number(document.getElementById('df-pb').value)||50,stage:document.getElementById('df-sg').value,status:'open',close:document.getElementById('df-cl').value||fd(30),created:today(),notes:[]});
+  persist();closeModal('modal-d');renderDeals();updatePipelineTotal();updateDash();renderPipeRows();
+  pushAct(`עסקה חדשה: <strong>${esc(name)}</strong>`,'#F59E0B');
   toast(`עסקה "${name}" נוספה`);
 }
 
@@ -1211,32 +1484,41 @@ function openDealDrawer(id){
   document.getElementById('deal-drawer-overlay').classList.add('open');
 }
 function closeDealDrawer(){document.getElementById('deal-drawer-overlay').classList.remove('open');_dealDrawerId=null}
-function _updateDDbadges(d){document.getElementById('dd-badges').innerHTML=`<span class="badge" style="background:rgba(255,255,255,.06);color:var(--text2)">${d.stage}</span><span class="badge b-${d.prob>=70?'green':d.prob>=40?'amber':'red'}">${d.prob}%</span>`}
+function _updateDDbadges(d){
+  const statusBadge=d.status==='won'?'<span class="badge b-green">נסגרה בהצלחה</span>':d.status==='lost'?'<span class="badge b-red">אבודה</span>':`<span class="badge" style="background:rgba(255,255,255,.06);color:var(--text2)">${esc(d.stage)}</span>`;
+  document.getElementById('dd-badges').innerHTML=`${statusBadge}<span class="badge b-${d.prob>=70?'green':d.prob>=40?'amber':'red'}">${d.prob}%</span>`;
+}
 function dealDrawerTab(tab,el){
   document.querySelectorAll('#deal-drawer .dtab').forEach(t=>t.classList.remove('active'));el.classList.add('active');
   const d=DB.deals.find(x=>x.id===_dealDrawerId);if(!d)return;
   const body=document.getElementById('deal-drawer-body');
   if(tab==='info'){
+    const isOpen=(d.status||'open')==='open';
     body.innerHTML=`
       <div class="d-field"><div class="d-field-lbl">שווי</div><div class="d-field-val" style="font-family:'Urbanist',sans-serif;font-size:24px;font-weight:800;color:var(--green);margin-top:4px">${fmtM(d.value)}</div></div>
-      <div class="d-field" style="margin-top:14px"><div class="d-field-lbl">שלב</div>
+      ${isOpen?`<div class="d-field" style="margin-top:14px"><div class="d-field-lbl">שלב</div>
         <select class="f-sel" style="margin-top:5px" onchange="updateDealStage(${d.id},this.value)">${STAGES.map(s=>`<option value="${s.name}"${d.stage===s.name?' selected':''}>${s.name}</option>`).join('')}</select></div>
       <div class="d-field"><div class="d-field-lbl">הסתברות סגירה</div>
         <div style="display:flex;align-items:center;gap:10px;margin-top:6px">
           <input type="range" min="0" max="100" value="${d.prob}" style="flex:1;accent-color:var(--accent)" oninput="this.nextElementSibling.textContent=this.value+'%'" onchange="updateDealProb(${d.id},this.value)">
           <span style="font-family:'Urbanist',sans-serif;font-weight:700;font-size:14px;min-width:36px">${d.prob}%</span>
-        </div></div>
-      <div class="d-field"><div class="d-field-lbl">לקוח</div><div class="d-field-val">${d.company}</div></div>
+        </div></div>`:`<div class="d-field" style="margin-top:14px"><div class="d-field-lbl">סטטוס</div><div class="d-field-val">${d.status==='won'?'נסגרה בהצלחה ✅':'אבודה ❌'}</div></div>`}
+      <div class="d-field"><div class="d-field-lbl">לקוח</div><div class="d-field-val">${esc(d.company)}</div></div>
       <div class="d-field"><div class="d-field-lbl">סגירה צפויה</div><div class="d-field-val">${fmtD(d.close)}</div></div>
       <div class="d-field"><div class="d-field-lbl">נוצר</div><div class="d-field-val">${fmtD(d.created)}</div></div>
       <div class="d-field"><div class="d-field-lbl">ימים בפייפליין</div><div class="d-field-val">${daysAgo(d.created)} ימים</div></div>
-      <div style="margin-top:18px;padding-top:14px;border-top:1px solid var(--border)">
+      ${isOpen?`<div class="quick-actions" style="margin-top:14px">
+        <button class="btn btn-primary btn-sm" style="background:var(--green)" onclick="closeDeal(${d.id},'won')">✓ נסגרה בהצלחה</button>
+        <button class="btn btn-red btn-sm" onclick="closeDeal(${d.id},'lost')">✕ אבודה</button>
+      </div>`:`<div class="quick-actions" style="margin-top:14px"><button class="btn btn-ghost btn-sm" onclick="reopenDeal(${d.id});closeDealDrawer()">פתח מחדש</button></div>`}
+      <div style="margin-top:18px;padding-top:14px;border-top:1px solid var(--border);display:flex;gap:7px">
+        <button class="btn btn-ghost btn-sm" onclick="openEditDeal(${d.id})">ערוך</button>
         <button class="btn btn-red btn-sm" onclick="if(confirm('למחוק עסקה?')){deleteDeal(${d.id});closeDealDrawer()}">מחק עסקה</button></div>`;
   } else {
     const notes=d.notes||[];
     body.innerHTML=`<textarea class="note-input" id="deal-note-inp" rows="3" placeholder="הוסף הערה..."></textarea>
       <button class="btn btn-primary btn-sm" style="margin:8px 0 14px" onclick="saveDealNote()">שמור הערה</button>
-      ${notes.length?notes.map(n=>`<div class="note-item"><div class="note-text">${n.text}</div><div class="note-date">${fmtD(n.date)}</div></div>`).join(''):'<div style="color:var(--text3);font-size:13px">אין הערות עדיין</div>'}`;
+      ${notes.length?notes.map(n=>`<div class="note-item"><div class="note-text">${esc(n.text)}</div><div class="note-date">${fmtD(n.date)}</div></div>`).join(''):'<div style="color:var(--text3);font-size:13px">אין הערות עדיין</div>'}`;
   }
 }
 function updateDealStage(id,stage){
@@ -1247,7 +1529,22 @@ function updateDealProb(id,prob){
   const d=DB.deals.find(x=>x.id===id);if(!d)return;
   d.prob=Number(prob);persist();updateDash();_updateDDbadges(d);
 }
-function deleteDeal(id){DB.deals=DB.deals.filter(x=>x.id!==id);persist();renderDeals();updatePipelineTotal();updateDash();toast('עסקה נמחקה','err')}
+function closeDeal(id,status){
+  const d=DB.deals.find(x=>x.id===id);if(!d)return;
+  d.status=status;d.closedDate=today();if(status==='won')d.prob=100;else d.prob=0;
+  persist();renderDeals();updatePipelineTotal();updateDash();renderPipeRows();renderRevChart();renderDonut();
+  pushAct(status==='won'?`עסקה <strong>${esc(d.name)}</strong> נסגרה בהצלחה! 🎉`:`עסקה <strong>${esc(d.name)}</strong> סומנה כאבודה`,status==='won'?'#22C55E':'#EF4444');
+  toast(status==='won'?`🎉 ${d.name} נסגרה בהצלחה`:`${d.name} סומנה כאבודה`,status==='won'?'ok':'err');
+  closeDealDrawer();
+}
+function deleteDeal(id){
+  const d=DB.deals.find(x=>x.id===id);if(!d)return;
+  const idx=DB.deals.indexOf(d);
+  DB.deals.splice(idx,1);
+  persist();renderDeals();updatePipelineTotal();updateDash();renderPipeRows();
+  lastDeleted={type:'deal',item:d,index:idx};
+  toastUndo('עסקה נמחקה');
+}
 function saveDealNote(){
   const d=DB.deals.find(x=>x.id===_dealDrawerId);if(!d)return;
   const text=document.getElementById('deal-note-inp')?.value.trim();
@@ -1269,9 +1566,9 @@ function renderTasks(){
     <div class="t-check${t.done?' checked':''}" onclick="toggleTask(${t.id})" role="checkbox" aria-checked="${t.done}" tabindex="0" onkeydown="if(event.key===' ')toggleTask(${t.id})">
       ${t.done?'<svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>':''}
     </div>
-    <div class="t-body">
-      <div class="t-title">${t.title}</div>
-      <div class="t-meta"><span>${t.related}</span><span>${fmtD(t.due)}</span></div>
+    <div class="t-body" onclick="openEditTask(${t.id})">
+      <div class="t-title">${esc(t.title)}</div>
+      <div class="t-meta"><span>${esc(t.related)}</span><span>${fmtD(t.due)}</span></div>
     </div>
     <button class="btn btn-ghost btn-sm btn-icon" onclick="deleteTask(${t.id})" aria-label="מחק">
       <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
@@ -1290,14 +1587,42 @@ function renderTasks(){
   renderTasksPie();
 }
 
-function toggleTask(id){const t=DB.tasks.find(x=>x.id===id);if(!t)return;t.done=!t.done;persist();renderTasks();updateBadges();if(t.done){pushAct(`משימה הושלמה: <strong>${t.title}</strong>`,'#22C55E');toast('משימה הושלמה')}}
-function deleteTask(id){DB.tasks=DB.tasks.filter(t=>t.id!==id);persist();renderTasks();updateBadges();toast('משימה נמחקה','err')}
+function toggleTask(id){const t=DB.tasks.find(x=>x.id===id);if(!t)return;t.done=!t.done;persist();renderTasks();updateBadges();if(t.done){pushAct(`משימה הושלמה: <strong>${esc(t.title)}</strong>`,'#22C55E');toast('משימה הושלמה')}}
+function deleteTask(id){
+  const t=DB.tasks.find(x=>x.id===id);if(!t)return;
+  if(!confirm(`למחוק את המשימה "${t.title}"?`))return;
+  const idx=DB.tasks.indexOf(t);
+  DB.tasks.splice(idx,1);
+  persist();renderTasks();updateBadges();
+  lastDeleted={type:'task',item:t,index:idx};
+  toastUndo('משימה נמחקה');
+}
+function openEditTask(id){
+  const t=DB.tasks.find(x=>x.id===id);if(!t)return;
+  editTaskId=id;
+  document.getElementById('modal-t-title').textContent='עריכת משימה';
+  document.getElementById('tf-ti').value=t.title;
+  document.getElementById('tf-pr').value=t.priority;
+  document.getElementById('tf-du').value=t.due;
+  document.getElementById('tf-rl').value=t.related==='כללי'?'':t.related;
+  document.getElementById('modal-t').classList.add('open');
+}
 function saveTask(){
   const title=document.getElementById('tf-ti').value.trim();
   if(!title){toast('נא למלא כותרת','err');return}
+  if(editTaskId){
+    const t=DB.tasks.find(x=>x.id===editTaskId);
+    if(t){
+      Object.assign(t,{title,priority:document.getElementById('tf-pr').value,due:document.getElementById('tf-du').value||today(),related:document.getElementById('tf-rl').value.trim()||'כללי'});
+      persist();closeModal('modal-t');renderTasks();updateBadges();updateDash();
+      toast(`"${title}" עודכנה`);
+    }
+    editTaskId=null;
+    return;
+  }
   DB.tasks.unshift({id:Date.now(),title,priority:document.getElementById('tf-pr').value,due:document.getElementById('tf-du').value||today(),related:document.getElementById('tf-rl').value.trim()||'כללי',done:false});
   persist();closeModal('modal-t');renderTasks();updateBadges();updateDash();
-  pushAct(`משימה חדשה: <strong>${title}</strong>`,'#A78BFA');
+  pushAct(`משימה חדשה: <strong>${esc(title)}</strong>`,'#A78BFA');
   toast(`"${title}" נוספה`);
   document.getElementById('tf-ti').value='';document.getElementById('tf-rl').value='';
 }
@@ -1311,18 +1636,30 @@ const DEFAULT_ACT=[
   {text:'עסקה <strong>ייעוץ Q3</strong> — סיכוי עלה ל-90%',color:'#22C55E',time:'אתמול'},
 ];
 
-function pushAct(text,color){actLog.unshift({text,color,time:'עכשיו'});if(actLog.length>7)actLog.pop();renderActFeed()}
+function pushAct(text,color){actLog.unshift({text,color,time:'עכשיו',ts:Date.now()});if(actLog.length>20)actLog.pop();persistAct();renderActFeed()}
+function relTime(ts){
+  const diff=Math.round((Date.now()-ts)/60000);
+  if(diff<1)return'עכשיו';
+  if(diff<60)return`לפני ${diff} דק׳`;
+  const h=Math.round(diff/60);
+  if(h<24)return`לפני ${h} שע׳`;
+  return`לפני ${Math.round(h/24)} ימים`;
+}
 
 function renderActFeed(){
   const el=document.getElementById('act-feed');if(!el)return;
-  const list=actLog.length?actLog:DEFAULT_ACT;
-  el.innerHTML=list.map(a=>`<div class="act-row"><div class="act-dot" style="background:${a.color}"></div><div class="act-text">${a.text}</div><div class="act-time">${a.time}</div></div>`).join('');
+  const list=actLog.length?actLog.slice(0,7):DEFAULT_ACT;
+  el.innerHTML=list.map(a=>`<div class="act-row"><div class="act-dot" style="background:${a.color}"></div><div class="act-text">${a.text}</div><div class="act-time">${a.ts?relTime(a.ts):a.time}</div></div>`).join('');
 }
 
+function quarterStart(d=new Date()){const q=Math.floor(d.getMonth()/3)*3;return new Date(d.getFullYear(),q,1)}
 function updateDash(){
-  const rev=DB.deals.reduce((s,d)=>s+d.value*(d.prob/100),0);
-  const target=1500000;
-  const pct=Math.min(100,Math.round(rev/target*100));
+  const open=openDeals();
+  const pipelineWeighted=open.reduce((s,d)=>s+d.value*(d.prob/100),0);
+  const qStart=quarterStart();
+  const wonThisQ=wonDeals().filter(d=>new Date(d.closedDate||d.close)>=qStart).reduce((s,d)=>s+d.value,0);
+  const target=SETTINGS.target;
+  const pct=Math.min(100,Math.round(wonThisQ/target*100));
   // dynamic KPIs
   const now=new Date(),nowY=now.getFullYear(),nowM=now.getMonth();
   const lastM=nowM===0?11:nowM-1,lastY=nowM===0?nowY-1:nowY;
@@ -1332,20 +1669,23 @@ function updateDash(){
   const cDelta=cLast>0?Math.round((cThis-cLast)/cLast*100):cThis>0?100:0;
   const weekAgo=new Date(Date.now()-7*86400000);
   const newDeals=DB.deals.filter(d=>new Date(d.created)>=weekAgo).length;
-  const avgDays=DB.deals.length?Math.round(DB.deals.reduce((s,d)=>s+daysAgo(d.created),0)/DB.deals.length):0;
-  document.getElementById('s-c').textContent=DB.contacts.length;
+  const won=wonDeals();
+  const avgDays=won.length?Math.round(won.reduce((s,d)=>s+(new Date(d.closedDate||d.close)-new Date(d.created))/86400000,0)/won.length):0;
+  document.getElementById('s-c').textContent=DB.contacts.filter(c=>c.status!=='lead').length;
   const cDEl=document.getElementById('s-c-delta');
   if(cDEl){const up=cDelta>=0;cDEl.className='stat-delta '+(up?'up':'down');cDEl.textContent=(up?'↑ ':'↓ ')+Math.abs(cDelta)+'% מהחודש שעבר'}
-  document.getElementById('s-d').textContent=DB.deals.length;
+  document.getElementById('s-d').textContent=open.length;
   const dDEl=document.getElementById('s-d-delta');if(dDEl)dDEl.textContent='↑ '+newDeals+' חדשות השבוע';
   const sDays=document.getElementById('s-days');if(sDays)sDays.textContent=avgDays;
-  document.getElementById('s-r').textContent=fmtM(Math.round(rev));
+  const sDaysD=document.getElementById('s-days-delta');if(sDaysD)sDaysD.textContent=won.length?'ממוצע עסקאות שנסגרו':'אין עסקאות סגורות עדיין';
+  document.getElementById('s-r').textContent=fmtM(Math.round(pipelineWeighted));
   const fv=document.getElementById('forecast-val');
   const ff=document.getElementById('forecast-fill');
   const fp=document.getElementById('forecast-pct');
   const fb=document.getElementById('forecast-badge');
-  if(fv){fv.textContent=fmtM(Math.round(rev));ff.style.width=pct+'%';fp.textContent=pct;
+  if(fv){fv.textContent=fmtM(Math.round(wonThisQ));ff.style.width=pct+'%';fp.textContent=pct;
     if(fb){fb.className='badge '+(pct>=80?'b-green':pct>=50?'b-amber':'b-red');fb.textContent=pct>=80?'על המסלול':pct>=50?'סביר':'מאחור'}}
+  const tgtEl=document.getElementById('forecast-target');if(tgtEl)tgtEl.textContent=fmtM(SETTINGS.target);
 }
 
 function updateBadges(){
@@ -1356,7 +1696,8 @@ function updateBadges(){
 
 function renderPipeRows(){
   const el=document.getElementById('pipe-rows');if(!el)return;
-  const data=STAGES.map(s=>({...s,count:DB.deals.filter(d=>d.stage===s.name).length,val:DB.deals.filter(d=>d.stage===s.name).reduce((a,d)=>a+d.value,0)}));
+  const open=openDeals();
+  const data=STAGES.map(s=>({...s,count:open.filter(d=>d.stage===s.name).length,val:open.filter(d=>d.stage===s.name).reduce((a,d)=>a+d.value,0)}));
   const max=Math.max(...data.map(x=>x.count),1);
   el.innerHTML=data.map(s=>`<div class="pipe-row">
     <div class="pipe-name">${s.name}</div>
@@ -1373,17 +1714,21 @@ function renderRevChart(){
   const c=document.getElementById('c-rev');if(!c)return;
   const g=c.getContext('2d').createLinearGradient(0,0,0,210);
   g.addColorStop(0,'rgba(91,124,246,.28)');g.addColorStop(1,'rgba(91,124,246,0)');
-  mkChart('c-rev',{type:'line',data:{labels:['דצמ׳','ינו׳','פבר׳','מרץ','אפר׳','מאי'],datasets:[{data:[380000,420000,355000,510000,480000,620000],borderColor:'#5B7CF6',backgroundColor:g,borderWidth:2.5,pointRadius:4,pointBackgroundColor:'#5B7CF6',pointBorderColor:'#070B17',pointBorderWidth:2,tension:.4,fill:true}]},options:{maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{grid:CGRID,ticks:CTICK},y:{grid:CGRID,ticks:{...CTICK,callback:v=>'₪'+v.toLocaleString()}}}}});
+  const months=last6Months();
+  const won=wonDeals();
+  const data=months.map(mk=>won.filter(d=>monthKey(d.closedDate||d.close)===mk).reduce((s,d)=>s+d.value,0));
+  mkChart('c-rev',{type:'line',data:{labels:months.map(monthLbl),datasets:[{data,borderColor:'#5B7CF6',backgroundColor:g,borderWidth:2.5,pointRadius:4,pointBackgroundColor:'#5B7CF6',pointBorderColor:'#070B17',pointBorderWidth:2,tension:.4,fill:true}]},options:{maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{grid:CGRID,ticks:CTICK},y:{grid:CGRID,ticks:{...CTICK,callback:v=>'₪'+v.toLocaleString()}}}}});
 }
 
 function renderDonut(){
-  const counts=STAGES.map(s=>DB.deals.filter(d=>d.stage===s.name).length);
+  const open=openDeals();
+  const counts=STAGES.map(s=>open.filter(d=>d.stage===s.name).length);
   mkChart('c-donut',{type:'doughnut',data:{labels:STAGES.map(s=>s.name),datasets:[{data:counts,backgroundColor:['#64748B','#F59E0B','#A78BFA','#5B7CF6'],borderWidth:0,hoverOffset:5}]},options:{maintainAspectRatio:false,cutout:'70%',plugins:{legend:{position:'bottom',labels:{color:'#64748B',font:{family:'DM Sans',size:11},padding:9,boxWidth:8}}}}});
-  const mn=DB.deals.filter(d=>d.stage==='משא ומתן').length;
-  const winRate=DB.deals.length?Math.round((mn/DB.deals.length)*100):0;
+  const won=wonDeals().length,lost=lostDeals().length;
+  const winRate=(won+lost)?Math.round((won/(won+lost))*100):0;
   document.getElementById('donut-stats').innerHTML=`
-    <div class="mini-stat-row"><span>סה"כ עסקאות</span><span class="mini-val">${DB.deals.length}</span></div>
-    <div class="mini-stat-row"><span>שיעור המרה</span><span class="mini-val" style="color:var(--accent)">${winRate}%</span></div>`;
+    <div class="mini-stat-row"><span>עסקאות פתוחות</span><span class="mini-val">${open.length}</span></div>
+    <div class="mini-stat-row"><span>שיעור זכייה</span><span class="mini-val" style="color:var(--accent)">${winRate}%</span></div>`;
 }
 
 function renderTasksPie(){
@@ -1393,11 +1738,29 @@ function renderTasksPie(){
 }
 
 function renderReports(){
-  const months=['ינו׳','פבר׳','מרץ','אפר׳','מאי'];
-  mkChart('r1',{type:'bar',data:{labels:months,datasets:[{label:'יעד',data:[500000,520000,540000,560000,580000],backgroundColor:'rgba(91,124,246,.18)',borderColor:'#5B7CF6',borderWidth:2,borderRadius:4},{label:'בפועל',data:[420000,510000,480000,620000,540000],backgroundColor:'rgba(34,197,94,.18)',borderColor:'#22C55E',borderWidth:2,borderRadius:4}]},options:{maintainAspectRatio:false,plugins:{legend:{labels:{color:'#64748B',font:{family:'DM Sans',size:11}}}},scales:{x:{grid:CGRID,ticks:CTICK},y:{grid:CGRID,ticks:{...CTICK,callback:v=>'₪'+v.toLocaleString()}}}}});
-  mkChart('r2',{type:'pie',data:{labels:['הפניות','רשתות חברתיות','גוגל','אירועים','אחר'],datasets:[{data:[35,25,20,12,8],backgroundColor:['#5B7CF6','#A78BFA','#F59E0B','#22C55E','#EF4444'],borderWidth:0,hoverOffset:5}]},options:{maintainAspectRatio:false,plugins:{legend:{position:'right',labels:{color:'#64748B',font:{family:'DM Sans',size:11},padding:10,boxWidth:8}}}}});
-  mkChart('r3',{type:'bar',data:{labels:STAGES.map(s=>s.name),datasets:[{label:'%',data:[100,68,42,25],backgroundColor:['#64748B','#F59E0B','#A78BFA','#5B7CF6'],borderRadius:5}]},options:{maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{grid:CGRID,ticks:CTICK},y:{grid:CGRID,ticks:{...CTICK,callback:v=>v+'%'},max:110}}}});
-  mkChart('r4',{type:'line',data:{labels:months,datasets:[{data:[95000,110000,88000,145000,128000],borderColor:'#A78BFA',backgroundColor:'rgba(167,139,250,.1)',borderWidth:2.5,pointRadius:4,pointBackgroundColor:'#A78BFA',pointBorderColor:'#070B17',pointBorderWidth:2,tension:.4,fill:true}]},options:{maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{grid:CGRID,ticks:CTICK},y:{grid:CGRID,ticks:{...CTICK,callback:v=>'₪'+v.toLocaleString()}}}}});
+  const months=last6Months();
+  const monthLbls=months.map(monthLbl);
+  const won=wonDeals();
+  const monthlyTarget=SETTINGS.target/3;
+  const wonByMonth=months.map(mk=>won.filter(d=>monthKey(d.closedDate||d.close)===mk).reduce((s,d)=>s+d.value,0));
+  mkChart('r1',{type:'bar',data:{labels:monthLbls,datasets:[{label:'יעד',data:months.map(()=>monthlyTarget),backgroundColor:'rgba(91,124,246,.18)',borderColor:'#5B7CF6',borderWidth:2,borderRadius:4},{label:'בפועל',data:wonByMonth,backgroundColor:'rgba(34,197,94,.18)',borderColor:'#22C55E',borderWidth:2,borderRadius:4}]},options:{maintainAspectRatio:false,plugins:{legend:{labels:{color:'#64748B',font:{family:'DM Sans',size:11}}}},scales:{x:{grid:CGRID,ticks:CTICK},y:{grid:CGRID,ticks:{...CTICK,callback:v=>'₪'+v.toLocaleString()}}}}});
+
+  const srcCounts={};
+  DB.contacts.forEach(c=>{const s=c.source||'אחר';srcCounts[s]=(srcCounts[s]||0)+1});
+  const srcEntries=Object.entries(srcCounts).sort((a,b)=>b[1]-a[1]);
+  mkChart('r2',{type:'pie',data:{labels:srcEntries.map(e=>e[0]),datasets:[{data:srcEntries.map(e=>e[1]),backgroundColor:srcEntries.map(e=>SRC_CLR[e[0]]||'#94A3B8'),borderWidth:0,hoverOffset:5}]},options:{maintainAspectRatio:false,plugins:{legend:{position:'right',labels:{color:'#64748B',font:{family:'DM Sans',size:11},padding:10,boxWidth:8}}}}});
+
+  const allDeals=DB.deals;
+  const stageBase=allDeals.length||1;
+  const stageCounts=STAGES.map((s,i)=>{
+    const upTo=STAGES.slice(0,i+1).map(x=>x.name);
+    const reached=allDeals.filter(d=>d.status==='won'||upTo.includes(d.stage)).length;
+    return Math.round(reached/stageBase*100);
+  });
+  mkChart('r3',{type:'bar',data:{labels:STAGES.map(s=>s.name),datasets:[{label:'%',data:stageCounts,backgroundColor:['#64748B','#F59E0B','#A78BFA','#5B7CF6'],borderRadius:5}]},options:{maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{grid:CGRID,ticks:CTICK},y:{grid:CGRID,ticks:{...CTICK,callback:v=>v+'%'},max:110}}}});
+
+  const avgByMonth=months.map(mk=>{const list=won.filter(d=>monthKey(d.closedDate||d.close)===mk);return list.length?Math.round(list.reduce((s,d)=>s+d.value,0)/list.length):0});
+  mkChart('r4',{type:'line',data:{labels:monthLbls,datasets:[{data:avgByMonth,borderColor:'#A78BFA',backgroundColor:'rgba(167,139,250,.1)',borderWidth:2.5,pointRadius:4,pointBackgroundColor:'#A78BFA',pointBorderColor:'#070B17',pointBorderWidth:2,tension:.4,fill:true}]},options:{maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{grid:CGRID,ticks:CTICK},y:{grid:CGRID,ticks:{...CTICK,callback:v=>'₪'+v.toLocaleString()}}}}});
 }
 
 /* ─── COMMAND PALETTE ─── */
@@ -1491,6 +1854,7 @@ if(!DB.contacts.some(c=>c.status==='lead')){
 DB.contacts.filter(c=>c.status==='lead'&&!c.leadStage).forEach(c=>c.leadStage='חדש');persist();
 const _savedTheme=localStorage.getItem('crm_theme')||'dark';
 applyTheme(_savedTheme);
+applySettingsToUI();
 updateDash();updateBadges();renderActFeed();renderPipeRows();renderRevChart();renderDonut();
 </script>
 </body>
